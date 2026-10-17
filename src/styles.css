@@ -67,6 +67,9 @@ textarea { min-height: 110px; resize: vertical; }
   background: var(--navy); color: var(--white);
   cursor: pointer;
 }
+/* 深色按鈕上的圖標：蜜桃色對比不夠，改用 logo 橘色，鏤空處用按鈕底色 */
+.btn { --icon-accent: var(--orange); --icon-hole: var(--navy); }
+.btn.ghost, .btn.plain, .btn.danger { --icon-accent: #ffd3a8; --icon-hole: var(--white); }
 .btn:disabled { opacity: .55; cursor: default; }
 .btn.block { width: 100%; padding: 15px; }
 .btn.ghost { background: var(--white); color: var(--navy); }
@@ -81,6 +84,7 @@ textarea { min-height: 110px; resize: vertical; }
   box-shadow: var(--shadow);
   padding: 18px;
 }
+.note .ic { margin-right: 4px; }
 .note {
   background: var(--cream-deep);
   border-radius: 12px;
@@ -104,7 +108,7 @@ textarea { min-height: 110px; resize: vertical; }
   border-bottom: 1px solid var(--border);
 }
 .topbar h1 { font-size: 20px; flex: 1; }
-.topbar .back { font-size: 22px; padding: 0 6px 0 0; color: var(--ink); background: none; border: 0; cursor: pointer; }
+.topbar .back { display: grid; place-items: center; padding: 4px; margin-left: -6px; color: var(--ink); background: none; border: 0; cursor: pointer; }
 .logo-sm { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; }
 
 /* 底部導覽 */
@@ -118,7 +122,7 @@ textarea { min-height: 110px; resize: vertical; }
 }
 .tabbar a { display: flex; flex-direction: column; align-items: center; font-size: 13px; color: var(--muted); min-width: 64px; }
 .tabbar a.router-link-exact-active { color: var(--navy); font-weight: 700; }
-.tabbar .icon { font-size: 22px; line-height: 1.2; position: relative; }
+.tabbar .icon { line-height: 0; margin-bottom: 2px; position: relative; }
 .badge {
   position: absolute; top: -4px; right: -12px;
   background: #c8553d; color: var(--white);

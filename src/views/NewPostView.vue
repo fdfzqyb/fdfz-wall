@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../supabase'
+import Icon from '../components/Icon.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -56,12 +57,12 @@ async function submit() {
 
 <template>
   <header class="topbar">
-    <button class="back" @click="router.back()">‹</button>
+    <button class="back" aria-label="返回" @click="router.back()"><Icon name="back" :size="24" /></button>
     <h1>{{ editId ? '申請修改問題' : '發布問題' }}</h1>
   </header>
   <form class="page stack" @submit.prevent="submit">
     <p v-if="editId" class="note">修改需要權益部同意後才會生效。</p>
-    <p v-else class="note">其他同學看不到你的姓名和學號，只有權益部看得到。</p>
+    <p v-else class="note"><Icon name="eye" :size="18" />其他同學看不到你的姓名和學號，只有權益部看得到。</p>
     <label class="field">
       <span>問題分類</span>
       <select v-model="form.category_id" required>

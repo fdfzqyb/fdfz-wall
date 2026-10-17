@@ -4,6 +4,10 @@ import { useRouter } from 'vue-router'
 import { supabase } from '../supabase'
 import { formatDate } from '../constants'
 import TabBar from '../components/TabBar.vue'
+import Icon from '../components/Icon.vue'
+
+// 通知訊息由資料庫觸發器產生（見 schema.sql 第 4 節），按開頭的字分三種圖標
+const noticeIcon = (msg) => (msg.includes('狀態已更新') ? 'status' : msg.startsWith('權益部回覆') ? 'chat' : 'check')
 
 const router = useRouter()
 const items = ref([])
@@ -47,7 +51,8 @@ onMounted(load)
   <div class="page stack">
     <p v-if="!items.length" class="muted center">目前沒有通知。</p>
     <button v-for="n in items" :key="n.id" class="card item" :class="{ unread: !n.is_read }" @click="open(n)">
-      <span>{{ n.message }}</span>
+      <Icon :name="noticeIcon(n.message)" :size="22" class="kind" />
+      <span class="text">{{ n.message }}</span>
       <span class="muted small">{{ formatDate(n.created_at) }}</span>
     </button>
 
@@ -63,7 +68,9 @@ onMounted(load)
 </template>
 
 <style scoped>
-.item { display: flex; justify-content: space-between; gap: 12px; width: 100%; text-align: left; font: inherit; cursor: pointer; }
+.item { display: flex; align-items: flex-start; gap: 12px; color: inherit; border: 0; width: 100%; text-align: left; font: inherit; cursor: pointer; }
 .item.unread { border-left: 4px solid var(--orange); font-weight: 600; }
 h3 { font-size: 17px; }
+.item .text { flex: 1; }
+.kind { color: var(--navy); margin-top: 2px; }
 </style>
