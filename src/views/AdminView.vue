@@ -2,12 +2,15 @@
 import { ref, onMounted } from 'vue'
 import { supabase } from '../supabase'
 import { formatDate } from '../constants'
+import { auth, isAdmin } from '../auth'
 import TabBar from '../components/TabBar.vue'
 
 const tab = ref('accounts')
 const accounts = ref([])
 const requests = ref([])
 const feedbacks = ref([])
+const users = ref([])
+const userSearch = ref('')
 const message = ref('')
 
 // 待審核帳號，加上已拒絕但重新上傳了照片的帳號
@@ -27,9 +30,8 @@ async function loadAccounts() {
 }
 
 async function review(p, approve) {
-  const { error } = await supabase.from('profiles')
-    .update({ verify_status: approve ? 'approved' : 'rejected' }).eq('id', p.id)
-  if (error) return (message.value = '更新失敗')
+  const { error } = await supabase.rpc('review_account', { target: p.id, approve })
+  if (error) return (message.value = error.message)
   // 不論通過或拒絕，審核完就刪除學生證照片
   await supabase.storage.from('id-cards').remove([`${p.id}/card.jpg`])
   accounts.value = accounts.value.filter((a) => a.id !== p.id)
@@ -57,7 +59,32 @@ async function loadFeedback() {
   feedbacks.value = data ?? []
 }
 
-onMounted(() => Promise.all([loadAccounts(), loadRequests(), loadFeedback()]))
+// 以下只有超級管理員用得到；資料庫也會檢查身份，普通權益部呼叫會被拒絕
+const ROLE_LABEL = { student: '普通同學', staff: '權益部', admin: '管理員' }
+const STATUS_LABEL = { pending: '待審核', approved: '已通過', rejected: '未通過' }
+
+async function loadUsers() {
+  const { data } = await supabase.rpc('admin_list_users')
+  users.value = data ?? []
+}
+
+function filteredUsers() {
+  const q = userSearch.value.trim().toLowerCase()
+  if (!q) return users.value
+  return users.value.filter((u) =>
+    [u.full_name, u.student_id, u.email].some((v) => v?.toLowerCase().includes(q)))
+}
+
+async function changeRole(u, newRole) {
+  const { error } = await supabase.rpc('set_user_role', { target: u.id, new_role: newRole })
+  if (error) return (message.value = error.message)
+  message.value = `已把 ${u.full_name} 設為${ROLE_LABEL[newRole]}`
+  await loadUsers()
+}
+
+onMounted(() => Promise.all([
+  loadAccounts(), loadRequests(), loadFeedback(), isAdmin() ? loadUsers() : null,
+]))
 </script>
 
 <template>
@@ -67,6 +94,7 @@ onMounted(() => Promise.all([loadAccounts(), loadRequests(), loadFeedback()]))
       <button class="chip" :class="{ on: tab === 'accounts' }" @click="tab = 'accounts'">帳號審核 {{ accounts.length }}</button>
       <button class="chip" :class="{ on: tab === 'requests' }" @click="tab = 'requests'">修改刪除申請 {{ requests.length }}</button>
       <button class="chip" :class="{ on: tab === 'feedback' }" @click="tab = 'feedback'">同學建議</button>
+      <button v-if="isAdmin()" class="chip" :class="{ on: tab === 'users' }" @click="tab = 'users'">用戶管理</button>
     </div>
     <p v-if="message" class="note">{{ message }}</p>
 
@@ -119,11 +147,31 @@ onMounted(() => Promise.all([loadAccounts(), loadRequests(), loadFeedback()]))
         <span class="muted small">{{ f.profiles?.full_name }}（{{ f.profiles?.student_id }}） · {{ formatDate(f.created_at) }}</span>
       </div>
     </template>
+
+    <template v-if="tab === 'users' && isAdmin()">
+      <p class="note">只有管理員看得到這一頁。升為權益部的同學可以看到發帖人和提建議同學的姓名學號，請謹慎操作。</p>
+      <input v-model="userSearch" type="search" placeholder="搜尋姓名、學號或 email" />
+      <p class="muted small">共 {{ users.length }} 個帳號</p>
+      <div v-for="u in filteredUsers()" :key="u.id" class="card user">
+        <div>
+          <strong>{{ u.full_name }}</strong> · {{ u.student_id }}
+          <p class="muted small">{{ u.email }} · {{ STATUS_LABEL[u.verify_status] }} · {{ formatDate(u.created_at) }}</p>
+        </div>
+        <span v-if="u.role === 'admin' || u.id === auth.session.user.id" class="muted small">{{ ROLE_LABEL[u.role] }}</span>
+        <select v-else :value="u.role" @change="changeRole(u, $event.target.value)">
+          <option value="student">普通同學</option>
+          <option value="staff">權益部</option>
+        </select>
+      </div>
+    </template>
   </div>
   <TabBar />
 </template>
 
 <style scoped>
+.user { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.user p { margin: 2px 0 0; }
+.user select { width: auto; flex: none; }
 .card-photo { width: 100%; border-radius: 10px; }
 .actions { display: flex; gap: 10px; }
 .diff { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px; }

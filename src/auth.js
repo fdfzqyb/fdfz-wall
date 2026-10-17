@@ -35,7 +35,9 @@ export async function initAuth() {
 }
 
 export const isApproved = () => auth.profile?.verify_status === 'approved'
-export const isStaff = () => isApproved() && auth.profile?.role === 'staff'
+// admin（超級管理員）擁有權益部的全部權限，另外可以改別人的身份
+export const isStaff = () => isApproved() && ['staff', 'admin'].includes(auth.profile?.role)
+export const isAdmin = () => isApproved() && auth.profile?.role === 'admin'
 
 // 輸入八位數字當學號，否則當 email
 export async function signIn(account, password) {
