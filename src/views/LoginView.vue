@@ -50,7 +50,13 @@ async function submit() {
 </template>
 
 <style scoped>
-.login { padding-top: 40px; }
+/* 背景用 logo 的底色，讓方形 logo 融進頁面；陰影向兩側鋪滿整個視窗寬度 */
+.login {
+  padding-top: 40px; min-height: 100vh;
+  background: var(--cream-logo);
+  box-shadow: 0 0 0 100vmax var(--cream-logo);
+  clip-path: inset(0 -100vmax);
+}
 .logo { display: block; width: 168px; height: 168px; margin: 0 auto 20px; border-radius: 24px; object-fit: cover; }
 h1 { font-size: 30px; }
 </style>
