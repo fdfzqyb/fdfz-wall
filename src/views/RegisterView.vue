@@ -37,7 +37,6 @@ async function submit() {
       password: f.password,
       options: {
         data: { full_name: f.name.trim(), student_id: f.sid },
-        emailRedirectTo: `${window.location.origin}/login`,
       },
     })
     if (signUpError) throw new Error('註冊失敗：' + signUpError.message)
@@ -47,7 +46,7 @@ async function submit() {
     }
 
     const blob = await shrinkImage(photo.value)
-    // 不能用 upsert：覆蓋需要讀取權限，而還沒驗證 email 的新帳號沒有登入、讀不到資料夾
+    // 不能用 upsert：覆蓋需要讀取權限，而新帳號還沒審核、讀不到資料夾
     const { error: uploadError } = await supabase.storage
       .from('id-cards')
       .upload(`${data.user.id}/card.jpg`, blob, { contentType: 'image/jpeg' })
@@ -71,7 +70,7 @@ async function submit() {
     <h1>註冊新帳號</h1>
   </header>
   <form class="page stack" @submit.prevent="submit">
-    <p class="muted">填寫資料並上傳學生證照片。驗證 Email 並經權益部審核後，帳號才會開通。</p>
+    <p class="muted">填寫資料並上傳學生證照片。經權益部審核後，帳號才會開通。</p>
     <label class="field"><span>姓名</span><input v-model="form.name" required /></label>
     <label class="field">
       <span>學號</span>
@@ -81,7 +80,7 @@ async function submit() {
     <label class="field">
       <span>Email</span>
       <input v-model="form.email" type="email" autocomplete="email" required />
-      <small>任何信箱都可以，用來登入和收驗證信</small>
+      <small>任何信箱都可以，用來登入</small>
     </label>
     <label class="field">
       <span>密碼</span>

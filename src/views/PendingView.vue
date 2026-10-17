@@ -13,7 +13,6 @@ const loggedIn = computed(() => !!auth.session)
 const rejected = computed(() => auth.profile?.verify_status === 'rejected')
 const name = computed(() => auth.profile?.full_name ?? saved?.name)
 const sid = computed(() => auth.profile?.student_id ?? saved?.sid)
-const email = computed(() => auth.session?.user.email ?? saved?.email)
 const message = ref('')
 // 註冊時照片可能沒傳成功；登入後查一下自己的資料夾，沒有照片就讓他補傳
 const hasPhoto = ref(true)
@@ -23,11 +22,6 @@ onMounted(async () => {
   const { data } = await supabase.storage.from('id-cards').list(auth.session.user.id)
   hasPhoto.value = !!data?.some((f) => f.name === 'card.jpg')
 })
-
-async function resend() {
-  const { error } = await supabase.auth.resend({ type: 'signup', email: email.value })
-  message.value = error ? '寄送失敗，請稍後再試' : '驗證信已重新寄出'
-}
 
 async function reupload(e) {
   const file = e.target.files[0]
@@ -63,10 +57,8 @@ async function logout() {
       <p class="muted">權益部無法從照片確認你的身份。請重新上傳一張清楚的學生證照片，或直接聯絡權益部。</p>
     </template>
     <template v-else>
-      <h1>{{ loggedIn ? '正在等待審核' : '註冊申請已提交' }}</h1>
-      <p class="muted">
-        {{ loggedIn ? '權益部核對你的學生證後，就能開始使用。' : '先到信箱點擊驗證連結，然後等權益部核對你的學生證。' }}
-      </p>
+      <h1>正在等待審核</h1>
+      <p class="muted">權益部核對你的學生證後，就能開始使用。</p>
     </template>
 
     <div class="card steps">
@@ -74,16 +66,8 @@ async function logout() {
         <b><Icon name="check" :size="18" /></b>
         <div><strong>提交資料</strong><p class="muted small" v-if="name">{{ name }} · {{ sid }}</p></div>
       </div>
-      <div class="step" :class="{ done: loggedIn }">
-        <b><Icon v-if="loggedIn" name="check" :size="18" /><template v-else>2</template></b>
-        <div>
-          <strong>驗證 Email</strong>
-          <p class="muted small" v-if="email">驗證信已寄到 {{ email }}</p>
-          <button v-if="!loggedIn && email" class="btn plain small" @click="resend">重新寄送</button>
-        </div>
-      </div>
       <div class="step">
-        <b>3</b>
+        <b>2</b>
         <div><strong>權益部審核學生證</strong><p class="muted small">通過後就能使用，照片隨即刪除</p></div>
       </div>
     </div>

@@ -12,10 +12,10 @@
 2. **Storage** → New bucket，名稱 `id-cards`，**不要**勾 Public。可以把檔案大小上限設為 5 MB、只允許 `image/*`。
 3. **SQL Editor** → 把 `supabase/schema.sql` 整份貼上 → Run。只需要執行一次。
 4. **Authentication → Sign In / Providers → Email**：
-   - 保留 Confirm email（同學要點驗證信）
+   - 關掉 Confirm email（同學註冊後直接登入，不用點驗證信；身份由權益部看學生證審核）
    - Minimum password length 設為 8
 5. **Authentication → URL Configuration**：Site URL 填網站網址（本機測試時是 `http://localhost:5173`，上線後改成 Cloudflare 給的 `xxx.pages.dev`）。
-6. 正式開放註冊前，到 **Authentication → Emails → SMTP Settings** 接一個寄信服務（例如 Resend）。Supabase 內建的寄信每小時只能寄很少封。
+6. 關掉驗證信後，網站平常不寄信。以後如果加上「忘記密碼」，再到 **Authentication → Emails → SMTP Settings** 接一個寄信服務（例如 Resend）。
 
 ### 建立超級管理員帳號
 
