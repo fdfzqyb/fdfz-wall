@@ -25,7 +25,7 @@ async function submit() {
   if (!/^\d{8}$/.test(f.sid)) return (error.value = '學號要是 8 位數字')
   if (f.password.length < 8) return (error.value = '密碼至少 8 個字元')
   if (f.password !== f.password2) return (error.value = '兩次輸入的密碼不一樣')
-  if (!photo.value) return (error.value = '請上傳學生證照片')
+  if (!photo.value) return (error.value = '請上傳校園卡照片')
 
   busy.value = true
   try {
@@ -70,7 +70,7 @@ async function submit() {
     <h1>註冊新帳號</h1>
   </header>
   <form class="page stack" @submit.prevent="submit">
-    <p class="muted">填寫資料並上傳學生證照片。經權益部審核後，帳號才會開通。</p>
+    <p class="muted">填寫資料並上傳校園卡照片。經權益部審核後，帳號才會開通。</p>
     <label class="field"><span>姓名</span><input v-model="form.name" required /></label>
     <label class="field">
       <span>學號</span>
@@ -92,9 +92,9 @@ async function submit() {
       <input v-model="form.password2" type="password" autocomplete="new-password" required />
     </label>
     <label class="field">
-      <span>學生證照片</span>
+      <span>校園卡照片</span>
       <div class="upload">
-        <img v-if="preview" :src="preview" alt="學生證預覽" />
+        <img v-if="preview" :src="preview" alt="校園卡預覽" />
         <template v-else>
           <Icon name="camera" :size="32" />
           <strong>拍照或選擇照片</strong>

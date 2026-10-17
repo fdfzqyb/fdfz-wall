@@ -42,7 +42,7 @@ async function submit() {
       <p v-if="error" class="error">{{ error }}</p>
       <button class="btn block" :disabled="busy">{{ busy ? '登入中…' : '登入' }}</button>
     </form>
-    <p class="center muted small">忘記密碼？請帶學生證找權益部重設。</p>
+    <p class="center muted small">忘記密碼？請帶校園卡找權益部重設。</p>
 
     <p class="center muted" style="margin-top: 40px">還沒有帳號？</p>
     <router-link to="/register" class="btn ghost block">註冊新帳號</router-link>

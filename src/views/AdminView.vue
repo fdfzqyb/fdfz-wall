@@ -156,8 +156,8 @@ onMounted(() => Promise.all([
           <strong>{{ p.full_name }}</strong> · {{ p.student_id }}
           <span v-if="p.verify_status === 'rejected'" class="muted small">（曾被拒絕，已重新上傳）</span>
         </div>
-        <img v-if="p.photo" :src="p.photo" alt="學生證" class="card-photo" />
-        <p v-else class="muted small">還沒有上傳學生證照片</p>
+        <img v-if="p.photo" :src="p.photo" alt="校園卡" class="card-photo" />
+        <p v-else class="muted small">還沒有上傳校園卡照片</p>
         <div class="actions">
           <button class="btn" :disabled="!p.photo" @click="review(p, true)">通過</button>
           <button class="btn danger" @click="review(p, false)">拒絕</button>
@@ -219,7 +219,7 @@ onMounted(() => Promise.all([
     </template>
 
     <template v-if="tab === 'reset'">
-      <p class="note">同學忘記密碼時，請先當面核對學生證，確認是本人再重設。</p>
+      <p class="note">同學忘記密碼時，請先當面核對校園卡，確認是本人再重設。</p>
       <form class="search-row" @submit.prevent="findForReset">
         <input v-model="resetSid" inputmode="numeric" placeholder="輸入八位學號" required />
         <button class="btn small">查詢</button>
