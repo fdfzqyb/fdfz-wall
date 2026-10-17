@@ -43,6 +43,20 @@ async function refresh() {
   if (isApproved()) router.replace('/')
 }
 
+// 資料填錯或註冊出了問題：刪掉這次註冊，同一個學號和 email 就能重新註冊
+async function deleteAccount() {
+  if (!window.confirm('確定刪除這次註冊？刪除後要重新填寫資料、上傳學生證。')) return
+  const id = auth.session.user.id
+  await supabase.storage.from('id-cards').remove([`${id}/card.jpg`])
+  const { error } = await supabase.rpc('delete_unapproved_account', { target: id })
+  if (error) return (message.value = '刪除失敗：' + error.message)
+  // 帳號已經不在了，只清掉這台裝置上的登入狀態
+  await supabase.auth.signOut({ scope: 'local' })
+  auth.profile = null
+  sessionStorage.removeItem('registered')
+  router.replace('/register')
+}
+
 async function logout() {
   await signOut()
   router.replace('/login')
@@ -82,6 +96,7 @@ async function logout() {
     <div class="actions">
       <button v-if="loggedIn" class="btn ghost block" @click="refresh">重新檢查審核狀態</button>
       <button v-if="loggedIn" class="btn plain block" @click="logout">登出</button>
+      <button v-if="loggedIn" class="btn danger block" @click="deleteAccount">資料填錯了？刪除這次註冊</button>
       <router-link v-else to="/login" class="btn plain block">回到登入頁</router-link>
     </div>
   </div>
