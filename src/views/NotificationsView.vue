@@ -30,12 +30,18 @@ async function loadAnnouncements() {
 
 async function publish() {
   const { title, body, audience, pinned } = draft.value
-  if (!title.trim() || !body.trim()) return
+  // 不用「沒填就停用按鈕」：iPhone 中文輸入法還在選字時，欄位看起來有字、程式卻還收不到，按了會沒反應
+  if (!title.trim() || !body.trim()) {
+    postError.value = '請填寫標題和內容'
+    return
+  }
   posting.value = true
+  postError.value = ''
   const { error } = await supabase.from('announcements')
     .insert({ title: title.trim(), body: body.trim(), audience, pinned })
   posting.value = false
   if (error) {
+    console.error(error)
     postError.value = '發布失敗：' + error.message
     return
   }
@@ -115,7 +121,7 @@ onMounted(() => {
       </div>
       <div class="actions">
         <button type="button" class="btn plain" @click="composing = false">取消</button>
-        <button class="btn" :disabled="posting || !draft.title.trim() || !draft.body.trim()">發布</button>
+        <button class="btn" :disabled="posting">{{ posting ? '發布中…' : '發布' }}</button>
       </div>
       <p v-if="postError" class="error">{{ postError }}</p>
     </form>
