@@ -29,5 +29,6 @@ watch(() => route.fullPath, loadUnread, { immediate: true })
       <span class="icon"><Icon name="bell" :size="24" /><span v-if="unread" class="badge">{{ unread }}</span></span>通知
     </router-link>
     <router-link v-if="isStaff()" to="/admin"><span class="icon"><Icon name="review" :size="24" /></span>權益部</router-link>
+    <router-link to="/account"><span class="icon"><Icon name="user" :size="24" /></span>帳號</router-link>
   </nav>
 </template>
