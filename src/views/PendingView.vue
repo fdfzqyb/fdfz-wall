@@ -45,7 +45,7 @@ async function refresh() {
 
 // 資料填錯或註冊出了問題：刪掉這次註冊，同一個學號和 email 就能重新註冊
 async function deleteAccount() {
-  if (!window.confirm('確定刪除這次註冊？刪除後要重新填寫資料、上傳學生證。')) return
+  if (!window.confirm('確定刪除這次註冊？刪除後要重新填寫資料、上傳校園卡。')) return
   const id = auth.session.user.id
   await supabase.storage.from('id-cards').remove([`${id}/card.jpg`])
   const { error } = await supabase.rpc('delete_unapproved_account', { target: id })
@@ -68,11 +68,11 @@ async function logout() {
     <div class="clock"><Icon name="clock" :size="34" /></div>
     <template v-if="rejected">
       <h1>審核未通過</h1>
-      <p class="muted">權益部無法從照片確認你的身份。請重新上傳一張清楚的學生證照片，或直接聯絡權益部。</p>
+      <p class="muted">權益部無法從照片確認你的身份。請重新上傳一張清楚的校園卡照片，或直接聯絡權益部。</p>
     </template>
     <template v-else>
       <h1>正在等待審核</h1>
-      <p class="muted">權益部核對你的學生證後，就能開始使用。</p>
+      <p class="muted">權益部核對你的校園卡後，就能開始使用。</p>
     </template>
 
     <div class="card steps">
@@ -82,13 +82,13 @@ async function logout() {
       </div>
       <div class="step">
         <b>2</b>
-        <div><strong>權益部審核學生證</strong><p class="muted small">通過後就能使用，照片隨即刪除</p></div>
+        <div><strong>權益部審核校園卡</strong><p class="muted small">通過後就能使用，照片隨即刪除</p></div>
       </div>
     </div>
 
-    <p v-if="loggedIn && !hasPhoto && !rejected" class="note">還沒收到你的學生證照片，請先上傳，權益部才能審核。</p>
+    <p v-if="loggedIn && !hasPhoto && !rejected" class="note">還沒收到你的校園卡照片，請先上傳，權益部才能審核。</p>
     <label v-if="rejected || (loggedIn && !hasPhoto)" class="btn ghost block upload">
-      {{ hasPhoto ? '重新上傳學生證照片' : '上傳學生證照片' }}
+      {{ hasPhoto ? '重新上傳校園卡照片' : '上傳校園卡照片' }}
       <input type="file" accept="image/*" @change="reupload" />
     </label>
     <p v-if="message" class="note">{{ message }}</p>
