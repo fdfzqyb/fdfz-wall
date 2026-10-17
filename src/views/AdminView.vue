@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { supabase } from '../supabase'
-import { formatDate } from '../constants'
+import { formatDate, MODERATION_KIND } from '../constants'
 import { auth, isAdmin } from '../auth'
 import TabBar from '../components/TabBar.vue'
 
@@ -9,6 +9,7 @@ const tab = ref('accounts')
 const accounts = ref([])
 const requests = ref([])
 const feedbacks = ref([])
+const moderations = ref([])
 const users = ref([])
 const userSearch = ref('')
 const message = ref('')
@@ -52,6 +53,22 @@ async function decide(r, approve) {
   message.value = approve ? '已同意申請' : '已拒絕申請'
 }
 
+async function loadModerations() {
+  const { data } = await supabase.from('moderation_requests')
+    .select('*, posts(title, problem), profiles(full_name), moderation_votes(staff_id)')
+    .eq('status', 'pending').order('created_at')
+  moderations.value = data ?? []
+}
+
+const votedByMe = (m) => m.moderation_votes.some((v) => v.staff_id === auth.session.user.id)
+
+async function voteModeration(m, approve) {
+  const { data, error } = await supabase.rpc('vote_moderation', { req_id: m.id, approve })
+  if (error) return (message.value = error.message)
+  message.value = data === 'applied' ? '已確認，處理已生效，發布者會收到通知' : data === 'rejected' ? '已駁回申請' : '已確認，還需要另一位權益部確認'
+  await loadModerations()
+}
+
 async function loadFeedback() {
   const { data } = await supabase.from('feedback')
     .select('id, body, created_at, profiles(full_name, student_id)')
@@ -83,7 +100,7 @@ async function changeRole(u, newRole) {
 }
 
 onMounted(() => Promise.all([
-  loadAccounts(), loadRequests(), loadFeedback(), isAdmin() ? loadUsers() : null,
+  loadAccounts(), loadRequests(), loadModerations(), loadFeedback(), isAdmin() ? loadUsers() : null,
 ]))
 </script>
 
@@ -93,6 +110,7 @@ onMounted(() => Promise.all([
     <div class="chips">
       <button class="chip" :class="{ on: tab === 'accounts' }" @click="tab = 'accounts'">帳號審核 {{ accounts.length }}</button>
       <button class="chip" :class="{ on: tab === 'requests' }" @click="tab = 'requests'">修改刪除申請 {{ requests.length }}</button>
+      <button class="chip" :class="{ on: tab === 'moderation' }" @click="tab = 'moderation'">敏感帖子 {{ moderations.length }}</button>
       <button class="chip" :class="{ on: tab === 'feedback' }" @click="tab = 'feedback'">同學建議</button>
       <button v-if="isAdmin()" class="chip" :class="{ on: tab === 'users' }" @click="tab = 'users'">用戶管理</button>
     </div>
@@ -136,6 +154,24 @@ onMounted(() => Promise.all([
         <div class="actions">
           <button class="btn" @click="decide(r, true)">同意</button>
           <button class="btn danger" @click="decide(r, false)">不同意</button>
+        </div>
+      </div>
+    </template>
+
+    <template v-if="tab === 'moderation'">
+      <p class="muted small">每個申請要兩位權益部確認才會生效，提出申請的人算第一位。</p>
+      <p v-if="!moderations.length" class="muted center">沒有等待確認的敏感帖子。</p>
+      <div v-for="m in moderations" :key="m.id" class="card stack">
+        <div>
+          <span class="status" :class="m.kind === 'hide' ? 'st-wontfix' : 'st-progress'">{{ MODERATION_KIND[m.kind].label }}</span>
+          <router-link :to="`/posts/${m.post_id}`"> {{ m.posts?.title }}</router-link>
+        </div>
+        <p class="body muted small">{{ m.posts?.problem }}</p>
+        <p class="body"><b>原因：</b>{{ m.reason }}</p>
+        <p class="muted small">{{ m.profiles?.full_name }} 提出 · {{ formatDate(m.created_at) }} · 已確認 {{ m.moderation_votes.length }}/2</p>
+        <div class="actions">
+          <button class="btn" :disabled="votedByMe(m)" @click="voteModeration(m, true)">{{ votedByMe(m) ? '你已確認' : '確認' }}</button>
+          <button class="btn danger" @click="voteModeration(m, false)">駁回</button>
         </div>
       </div>
     </template>
