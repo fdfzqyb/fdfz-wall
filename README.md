@@ -33,6 +33,10 @@ update profiles set role = 'admin', verify_status = 'approved' where student_id 
 
 到 SQL Editor 執行一次 [`supabase/migrations/002_super_admin.sql`](supabase/migrations/002_super_admin.sql)，再單獨執行上面那句把自己設為 admin。
 
+### 加上敏感帖子處理
+
+已經建好的資料庫，到 SQL Editor 執行一次 [`supabase/migrations/005_moderation.sql`](supabase/migrations/005_moderation.sql)。權益部在問題詳情頁最下面可以申請「隱藏」（暴力、色情、恐嚇、辱罵）或「涉及個人信息」，另一位權益部到後台「敏感帖子」確認後才生效。
+
 ### 加上公告功能
 
 已經建好的資料庫，到 SQL Editor 依序各執行一次 [`supabase/migrations/003_announcements.sql`](supabase/migrations/003_announcements.sql) 和 [`004_rename_announcements.sql`](supabase/migrations/004_rename_announcements.sql)（已執行過 003 的只要跑 004）。權益部和管理員就能在「通知」頁發布公告：長期公告置頂到手動刪除，短期通知兩週後自動消失；可以選給全體用戶或只給權益部看。
