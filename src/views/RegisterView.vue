@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../supabase'
 import { shrinkImage } from '../image'
+import Icon from '../components/Icon.vue'
 
 const router = useRouter()
 const form = ref({ name: '', sid: '', email: '', password: '', password2: '' })
@@ -66,7 +67,7 @@ async function submit() {
 
 <template>
   <header class="topbar">
-    <button class="back" @click="router.back()">‹</button>
+    <button class="back" aria-label="返回" @click="router.back()"><Icon name="back" :size="24" /></button>
     <h1>註冊新帳號</h1>
   </header>
   <form class="page stack" @submit.prevent="submit">
@@ -96,13 +97,14 @@ async function submit() {
       <div class="upload">
         <img v-if="preview" :src="preview" alt="學生證預覽" />
         <template v-else>
+          <Icon name="camera" :size="32" />
           <strong>拍照或選擇照片</strong>
           <small class="muted">需看清姓名和學號</small>
         </template>
         <input type="file" accept="image/*" @change="pickPhoto" />
       </div>
     </label>
-    <p class="note">🔒 照片只有權益部審核時看得到，審核完成後會自動刪除。</p>
+    <p class="note"><Icon name="lock" :size="18" />照片只有權益部審核時看得到，審核完成後會自動刪除。</p>
     <p v-if="error" class="error">{{ error }}</p>
     <button class="btn block" :disabled="busy">{{ busy ? '提交中…' : '提交註冊' }}</button>
   </form>

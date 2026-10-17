@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { supabase } from '../supabase'
 import { auth, signOut, loadProfile, isApproved } from '../auth'
 import { shrinkImage } from '../image'
+import Icon from '../components/Icon.vue'
 
 const router = useRouter()
 // 剛註冊完還沒登入時，資料從註冊頁暫存在 sessionStorage
@@ -56,7 +57,7 @@ async function logout() {
 
 <template>
   <div class="page pending">
-    <div class="clock">🕒</div>
+    <div class="clock"><Icon name="clock" :size="34" /></div>
     <template v-if="rejected">
       <h1>審核未通過</h1>
       <p class="muted">權益部無法從照片確認你的身份。請重新上傳一張清楚的學生證照片，或直接聯絡權益部。</p>
@@ -70,11 +71,11 @@ async function logout() {
 
     <div class="card steps">
       <div class="step done">
-        <b>✓</b>
+        <b><Icon name="check" :size="18" /></b>
         <div><strong>提交資料</strong><p class="muted small" v-if="name">{{ name }} · {{ sid }}</p></div>
       </div>
       <div class="step" :class="{ done: loggedIn }">
-        <b>{{ loggedIn ? '✓' : '2' }}</b>
+        <b><Icon v-if="loggedIn" name="check" :size="18" /><template v-else>2</template></b>
         <div>
           <strong>驗證 Email</strong>
           <p class="muted small" v-if="email">驗證信已寄到 {{ email }}</p>
@@ -104,7 +105,7 @@ async function logout() {
 
 <style scoped>
 .pending { padding-top: 48px; }
-.clock { width: 64px; height: 64px; border-radius: 50%; background: #dde9f7; display: grid; place-items: center; font-size: 30px; }
+.clock { width: 64px; height: 64px; border-radius: 50%; background: #dde9f7; display: grid; place-items: center; color: var(--navy); }
 h1 { font-size: 26px; margin: 20px 0 8px; }
 .steps { margin: 24px 0; display: grid; gap: 18px; }
 .step { display: flex; gap: 14px; }

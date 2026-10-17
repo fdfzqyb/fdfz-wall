@@ -3,6 +3,8 @@ import { ref, watch, onMounted } from 'vue'
 import { supabase } from '../supabase'
 import PostCard from '../components/PostCard.vue'
 import TabBar from '../components/TabBar.vue'
+import Icon from '../components/Icon.vue'
+import { CATEGORY_ICON } from '../constants'
 
 const categories = ref([])
 const posts = ref([])
@@ -42,11 +44,14 @@ watch([category, sort], load, { immediate: true })
       <img src="/logo.jpg" alt="" class="logo-sm" />
       <h1>fdfz權益牆</h1>
     </div>
-    <input v-model="search" type="search" placeholder="🔍 搜尋問題" class="search" />
+    <label class="search">
+      <Icon name="search" :size="20" />
+      <input v-model="search" type="search" placeholder="搜尋問題" />
+    </label>
     <div class="chips">
       <button class="chip" :class="{ on: !category }" @click="category = null">全部</button>
       <button v-for="c in categories" :key="c.id" class="chip" :class="{ on: category === c.id }" @click="category = c.id">
-        {{ c.name }}
+        <Icon v-if="CATEGORY_ICON[c.name]" :name="CATEGORY_ICON[c.name]" :size="16" />{{ c.name }}
       </button>
     </div>
   </header>
@@ -64,7 +69,7 @@ watch([category, sort], load, { immediate: true })
       <PostCard v-for="p in posts" :key="p.id" :post="p" />
     </div>
   </div>
-  <router-link to="/new" class="btn fab">＋ 發布問題</router-link>
+  <router-link to="/new" class="btn fab"><Icon name="megaphone" :size="22" />發布問題</router-link>
   <TabBar />
 </template>
 
@@ -76,7 +81,15 @@ watch([category, sort], load, { immediate: true })
 }
 .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .brand h1 { font-size: 22px; }
-.search { height: 44px; border-radius: 22px; border-color: transparent; background: var(--white); padding: 0 18px; margin-bottom: 12px; }
+.search {
+  display: flex; align-items: center; gap: 8px;
+  height: 44px; border-radius: 22px; background: var(--white); padding: 0 16px; margin-bottom: 12px;
+  color: var(--muted);
+}
+.search input { border: 0; padding: 0; background: none; height: 100%; }
+.search input:focus { outline: none; }
+.search:focus-within { outline: 2px solid var(--navy); }
+.chip { display: inline-flex; align-items: center; gap: 6px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin: 12px 0; }
 .sort button { font: inherit; border: 0; background: none; color: var(--muted); padding: 4px 10px; border-radius: 8px; cursor: pointer; }
 .sort button.on { background: var(--cream-deep); color: var(--ink); font-weight: 700; }

@@ -5,6 +5,7 @@ import { supabase } from '../supabase'
 import { isStaff } from '../auth'
 import { STATUS, formatDate } from '../constants'
 import MeTooButton from '../components/MeTooButton.vue'
+import Icon from '../components/Icon.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -70,7 +71,7 @@ onMounted(load)
 
 <template>
   <header class="topbar">
-    <button class="back" @click="router.back()">‹</button>
+    <button class="back" aria-label="返回" @click="router.back()"><Icon name="back" :size="24" /></button>
     <h1>問題詳情</h1>
   </header>
   <div class="page">
@@ -83,7 +84,7 @@ onMounted(load)
           <span class="status" :class="STATUS[post.status].cls">{{ STATUS[post.status].label }}</span>
         </div>
         <h2>{{ post.title }}</h2>
-        <p v-if="author" class="note">發布者：{{ author.full_name }}（{{ author.student_id }}）</p>
+        <p v-if="author" class="note"><Icon name="user" :size="18" />發布者：{{ author.full_name }}（{{ author.student_id }}）</p>
         <section><h4>問題描述</h4><p>{{ post.problem }}</p></section>
         <section><h4>可行建議</h4><p>{{ post.suggestion }}</p></section>
         <section><h4>預期解決效果</h4><p>{{ post.expected }}</p></section>

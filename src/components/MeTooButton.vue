@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { supabase } from '../supabase'
+import Icon from './Icon.vue'
 
 // post 需要有 id、me_too_count、me_too_by_me（來自 post_feed）
 const props = defineProps({ post: { type: Object, required: true } })
@@ -23,6 +24,6 @@ async function toggle() {
 
 <template>
   <button type="button" class="metoo" :class="{ on: post.me_too_by_me }" @click.stop.prevent="toggle">
-    👍 我也遇到 {{ post.me_too_count }}
+    <Icon name="metoo" :size="18" /> 我也遇到 {{ post.me_too_count }}
   </button>
 </template>

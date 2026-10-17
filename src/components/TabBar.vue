@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase } from '../supabase'
 import { auth, isStaff } from '../auth'
+import Icon from './Icon.vue'
 
 const route = useRoute()
 const unread = ref(0)
@@ -22,11 +23,11 @@ watch(() => route.fullPath, loadUnread, { immediate: true })
 
 <template>
   <nav class="tabbar">
-    <router-link to="/"><span class="icon">🏠</span>首頁</router-link>
-    <router-link to="/mine"><span class="icon">📄</span>我的帖子</router-link>
+    <router-link to="/"><span class="icon"><Icon name="home" :size="24" /></span>首頁</router-link>
+    <router-link to="/mine"><span class="icon"><Icon name="posts" :size="24" /></span>我的帖子</router-link>
     <router-link to="/notifications">
-      <span class="icon">🔔<span v-if="unread" class="badge">{{ unread }}</span></span>通知
+      <span class="icon"><Icon name="bell" :size="24" /><span v-if="unread" class="badge">{{ unread }}</span></span>通知
     </router-link>
-    <router-link v-if="isStaff()" to="/admin"><span class="icon">🛡️</span>權益部</router-link>
+    <router-link v-if="isStaff()" to="/admin"><span class="icon"><Icon name="review" :size="24" /></span>權益部</router-link>
   </nav>
 </template>
