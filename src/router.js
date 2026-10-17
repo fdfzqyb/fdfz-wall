@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { auth, isApproved, isStaff } from './auth'
+import { auth, authReady, isApproved, isStaff } from './auth'
 
 // meta.public：不用登入也能看；meta.staff：只有權益部能進
 const routes = [
@@ -21,7 +21,10 @@ export const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
+  await authReady
+  // 點完驗證連結會回到 /login 並已登入，直接帶進站
+  if (to.path === '/login' && auth.session) return isApproved() ? '/' : '/pending'
   if (to.meta.public) return true
   if (!auth.session) return '/login'
   if (!isApproved()) return '/pending'
