@@ -33,6 +33,10 @@ update profiles set role = 'admin', verify_status = 'approved' where student_id 
 
 到 SQL Editor 執行一次 [`supabase/migrations/002_super_admin.sql`](supabase/migrations/002_super_admin.sql)，再單獨執行上面那句把自己設為 admin。
 
+### 加上公告功能
+
+已經建好的資料庫，到 SQL Editor 執行一次 [`supabase/migrations/003_announcements.sql`](supabase/migrations/003_announcements.sql)。權益部和管理員就能在「通知」頁發布公告：長期公告置頂到手動刪除，短期通知兩週後自動消失；可以選給全體用戶或只給權益部看。
+
 ## 在自己電腦上執行
 
 需要先安裝 [Node.js](https://nodejs.org)（選 LTS 版）。
@@ -68,6 +72,6 @@ Cloudflare 控制台 → Workers & Pages → 建立 → 連接 GitHub，選這�
 | 發布問題 / 申請修改 | `/new` | 已審核同學 |
 | 問題詳情、回覆、申請刪除 | `/posts/:id` | 已審核同學 |
 | 我的帖子 | `/mine` | 已審核同學 |
-| 通知、對權益部的建議 | `/notifications` | 已審核同學 |
+| 通知、公告、對權益部的建議 | `/notifications` | 已審核同學（權益部可發布公告） |
 | 權益部後台（帳號審核、修改刪除審批、同學建議） | `/admin` | 權益部、管理員 |
 | 用戶管理（所有用戶資料、設定權益部） | `/admin` 的「用戶管理」 | 只有管理員 |
