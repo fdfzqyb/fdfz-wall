@@ -21,7 +21,7 @@ const saving = ref(false)
 async function changePassword() {
   error.value = ''
   message.value = ''
-  if (next.value.length < 6) return (error.value = '新密碼至少 6 個字元')
+  if (next.value.length < 8) return (error.value = '新密碼至少 8 個字元')
   if (next.value !== again.value) return (error.value = '兩次輸入的新密碼不一樣')
   saving.value = true
   // 先用舊密碼登入一次，確認是本人在操作
@@ -68,7 +68,7 @@ async function logout() {
       <label class="field">
         <span>新密碼</span>
         <input v-model="next" type="password" autocomplete="new-password" required />
-        <small>至少 6 個字元</small>
+        <small>至少 8 個字元</small>
       </label>
       <label class="field">
         <span>再輸入一次新密碼</span>
