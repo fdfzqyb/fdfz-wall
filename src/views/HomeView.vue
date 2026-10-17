@@ -37,11 +37,11 @@ watch([category, sort], load, { immediate: true })
 </script>
 
 <template>
-  <header class="topbar">
-    <img src="/logo.jpg" alt="" class="logo-sm" />
-    <h1>fdfz權益牆</h1>
-  </header>
-  <div class="page">
+  <header class="home-head">
+    <div class="brand">
+      <img src="/logo.jpg" alt="" class="logo-sm" />
+      <h1>fdfz權益牆</h1>
+    </div>
     <input v-model="search" type="search" placeholder="🔍 搜尋問題" class="search" />
     <div class="chips">
       <button class="chip" :class="{ on: !category }" @click="category = null">全部</button>
@@ -49,6 +49,8 @@ watch([category, sort], load, { immediate: true })
         {{ c.name }}
       </button>
     </div>
+  </header>
+  <div class="page">
     <div class="toolbar">
       <span class="muted">共 {{ posts.length }} 個問題</span>
       <div class="sort">
@@ -67,7 +69,14 @@ watch([category, sort], load, { immediate: true })
 </template>
 
 <style scoped>
-.search { background: var(--cream-deep); border-color: transparent; margin-bottom: 12px; }
+.home-head {
+  background: var(--cream-logo);
+  border-radius: 0 0 24px 24px;
+  padding: 12px 20px 14px;
+}
+.brand { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.brand h1 { font-size: 22px; }
+.search { height: 44px; border-radius: 22px; border-color: transparent; background: var(--white); padding: 0 18px; margin-bottom: 12px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin: 12px 0; }
 .sort button { font: inherit; border: 0; background: none; color: var(--muted); padding: 4px 10px; border-radius: 8px; cursor: pointer; }
 .sort button.on { background: var(--cream-deep); color: var(--ink); font-weight: 700; }
