@@ -46,10 +46,13 @@ async function submit() {
     }
 
     const blob = await shrinkImage(photo.value)
+    // 不能用 upsert：覆蓋需要讀取權限，而還沒驗證 email 的新帳號沒有登入、讀不到資料夾
     const { error: uploadError } = await supabase.storage
       .from('id-cards')
-      .upload(`${data.user.id}/card.jpg`, blob, { upsert: true, contentType: 'image/jpeg' })
-    if (uploadError) throw new Error('帳號已建立，但照片上傳失敗，請登入後在等待頁重新上傳')
+      .upload(`${data.user.id}/card.jpg`, blob, { contentType: 'image/jpeg' })
+    if (uploadError) {
+      throw new Error('帳號已建立，但照片上傳失敗，請登入後在等待頁重新上傳（' + uploadError.message + '）')
+    }
 
     sessionStorage.setItem('registered', JSON.stringify({ name: f.name, sid: f.sid, email: f.email }))
     router.replace('/pending')

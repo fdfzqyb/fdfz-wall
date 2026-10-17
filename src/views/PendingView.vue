@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../supabase'
 import { auth, signOut, loadProfile, isApproved } from '../auth'
@@ -14,6 +14,14 @@ const name = computed(() => auth.profile?.full_name ?? saved?.name)
 const sid = computed(() => auth.profile?.student_id ?? saved?.sid)
 const email = computed(() => auth.session?.user.email ?? saved?.email)
 const message = ref('')
+// 註冊時照片可能沒傳成功；登入後查一下自己的資料夾，沒有照片就讓他補傳
+const hasPhoto = ref(true)
+
+onMounted(async () => {
+  if (!auth.session) return
+  const { data } = await supabase.storage.from('id-cards').list(auth.session.user.id)
+  hasPhoto.value = !!data?.some((f) => f.name === 'card.jpg')
+})
 
 async function resend() {
   const { error } = await supabase.auth.resend({ type: 'signup', email: email.value })
@@ -27,7 +35,12 @@ async function reupload(e) {
   const { error } = await supabase.storage
     .from('id-cards')
     .upload(`${auth.session.user.id}/card.jpg`, blob, { upsert: true, contentType: 'image/jpeg' })
-  message.value = error ? '上傳失敗，請稍後再試' : '照片已上傳，請等權益部重新審核'
+  if (error) {
+    message.value = '上傳失敗，請稍後再試（' + error.message + '）'
+  } else {
+    hasPhoto.value = true
+    message.value = rejected.value ? '照片已上傳，請等權益部重新審核' : '照片已上傳，請等權益部審核'
+  }
 }
 
 async function refresh() {
@@ -74,8 +87,9 @@ async function logout() {
       </div>
     </div>
 
-    <label v-if="rejected" class="btn ghost block upload">
-      重新上傳學生證照片
+    <p v-if="loggedIn && !hasPhoto && !rejected" class="note">還沒收到你的學生證照片，請先上傳，權益部才能審核。</p>
+    <label v-if="rejected || (loggedIn && !hasPhoto)" class="btn ghost block upload">
+      {{ hasPhoto ? '重新上傳學生證照片' : '上傳學生證照片' }}
       <input type="file" accept="image/*" @change="reupload" />
     </label>
     <p v-if="message" class="note">{{ message }}</p>
