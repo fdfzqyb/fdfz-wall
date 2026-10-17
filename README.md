@@ -33,6 +33,10 @@ update profiles set role = 'admin', verify_status = 'approved' where student_id 
 
 到 SQL Editor 執行一次 [`supabase/migrations/002_super_admin.sql`](supabase/migrations/002_super_admin.sql)，再單獨執行上面那句把自己設為 admin。
 
+### 課程安排、其它的公開範圍
+
+已經建好的資料庫，到 SQL Editor 執行一次 [`supabase/migrations/008_category_visibility.sql`](supabase/migrations/008_category_visibility.sql)。食堂、寢室、校區基礎設施的帖子全面公開；課程安排和其它只在「處理中」「已解決」時公開，「待處理」「暫不能解決」只有發帖者和權益部看得到（回覆和「我也遇到」也一樣）。
+
 ### 加上權益部重設密碼
 
 已經建好的資料庫，到 SQL Editor 執行一次 [`supabase/migrations/007_reset_password.sql`](supabase/migrations/007_reset_password.sql)。同學忘記密碼時，權益部當面核對學生證，在後台「重設密碼」輸入學號產生臨時密碼；同學用臨時密碼登入後，網站會要求他先改成自己的密碼。權益部只能重設普通同學，管理員還可以重設權益部。管理員自己的密碼要到 Supabase 後台 Authentication → Users 處理。
