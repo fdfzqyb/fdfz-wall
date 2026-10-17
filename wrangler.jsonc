@@ -1,0 +1,10 @@
+// Cloudflare Workers 部署設定：把 npm run build 產生的 dist 當成靜態網站
+{
+  "name": "fdfz-wall",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // 讓 /login、/posts/123 這類網址重新整理時也回到網站，而不是 404
+    "not_found_handling": "single-page-application"
+  }
+}
