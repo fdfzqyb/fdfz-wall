@@ -71,6 +71,27 @@ async function loadModerations() {
   moderations.value = data ?? []
 }
 
+// 忘記密碼：先用學號查到人，核對身份後再產生臨時密碼
+const resetSid = ref('')
+const resetTarget = ref(null)
+const tempPassword = ref('')
+
+async function findForReset() {
+  tempPassword.value = ''
+  message.value = ''
+  const { data } = await supabase.from('profiles')
+    .select('full_name, student_id, role').eq('student_id', resetSid.value.trim()).maybeSingle()
+  resetTarget.value = data
+  if (!data) message.value = '找不到這個學號'
+}
+
+async function resetPassword() {
+  if (!window.confirm(`確定重設 ${resetTarget.value.full_name} 的密碼？對方原本的密碼會失效。`)) return
+  const { data, error } = await supabase.rpc('reset_password', { sid: resetTarget.value.student_id })
+  if (error) return (message.value = error.message)
+  tempPassword.value = data
+}
+
 const votedByMe = (m) => m.moderation_votes.some((v) => v.staff_id === auth.session.user.id)
 
 async function voteModeration(m, approve) {
@@ -123,6 +144,7 @@ onMounted(() => Promise.all([
       <button class="chip" :class="{ on: tab === 'requests' }" @click="tab = 'requests'">修改刪除申請 {{ requests.length }}</button>
       <button class="chip" :class="{ on: tab === 'moderation' }" @click="tab = 'moderation'">敏感帖子 {{ moderations.length }}</button>
       <button class="chip" :class="{ on: tab === 'feedback' }" @click="tab = 'feedback'">同學建議</button>
+      <button class="chip" :class="{ on: tab === 'reset' }" @click="tab = 'reset'">重設密碼</button>
       <button v-if="isAdmin()" class="chip" :class="{ on: tab === 'users' }" @click="tab = 'users'">用戶管理</button>
     </div>
     <p v-if="message" class="note">{{ message }}</p>
@@ -196,6 +218,23 @@ onMounted(() => Promise.all([
       </div>
     </template>
 
+    <template v-if="tab === 'reset'">
+      <p class="note">同學忘記密碼時，請先當面核對學生證，確認是本人再重設。</p>
+      <form class="search-row" @submit.prevent="findForReset">
+        <input v-model="resetSid" inputmode="numeric" placeholder="輸入八位學號" required />
+        <button class="btn small">查詢</button>
+      </form>
+      <div v-if="resetTarget" class="card stack">
+        <div><strong>{{ resetTarget.full_name }}</strong> · {{ resetTarget.student_id }} · {{ ROLE_LABEL[resetTarget.role] }}</div>
+        <template v-if="tempPassword">
+          <p>臨時密碼：</p>
+          <p class="temp">{{ tempPassword }}</p>
+          <p class="muted small">請把這組密碼告訴同學。他用學號和臨時密碼登入後，網站會要求他改成自己的密碼。離開這一頁後就看不到這組密碼了。</p>
+        </template>
+        <button v-else class="btn" @click="resetPassword">產生臨時密碼</button>
+      </div>
+    </template>
+
     <template v-if="tab === 'users' && isAdmin()">
       <p class="note">只有管理員看得到這一頁。升為權益部的同學可以看到發帖人和提建議同學的姓名學號，請謹慎操作。</p>
       <input v-model="userSearch" type="search" placeholder="搜尋姓名、學號或 email" />
@@ -224,6 +263,9 @@ onMounted(() => Promise.all([
 .user p { margin: 2px 0 0; }
 .user-actions { display: flex; gap: 8px; align-items: center; flex: none; }
 .user select { width: auto; flex: none; }
+.search-row { display: flex; gap: 10px; }
+.search-row .btn { flex: none; }
+.temp { font-size: 28px; font-weight: 700; letter-spacing: 3px; color: var(--navy); font-family: ui-monospace, monospace; margin: 0; }
 .card-photo { width: 100%; border-radius: 10px; }
 .actions { display: flex; gap: 10px; }
 .diff { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px; }
