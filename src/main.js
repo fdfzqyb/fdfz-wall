@@ -4,7 +4,6 @@ import { router } from './router'
 import { initAuth } from './auth'
 import './styles.css'
 
-// 先確認登入狀態，再顯示畫面，避免已登入的人閃一下登入頁
-initAuth().then(() => {
-  createApp(App).use(router).mount('#app')
-})
+// 馬上顯示畫面（先是「載入中」），登入狀態在背景確認；確認完路由才會繼續
+initAuth()
+createApp(App).use(router).mount('#app')
