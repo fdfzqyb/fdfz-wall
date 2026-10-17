@@ -159,15 +159,31 @@ create function post_not_hidden(pid bigint) returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (select 1 from posts where id = pid and moderation is distinct from 'hidden');
 $$;
+
+-- 誰看得到哪些帖子（權益部看全部，不經過這裡）：
+-- 食堂、寢室、校區基礎設施全面公開；
+-- 課程安排、其它只有「處理中」「已解決」才公開，「待處理」「暫不能解決」只有發帖者看得到。
+create function post_visible_to_me(cat_name text, st post_status, author uuid) returns boolean
+language sql stable as $$
+  select cat_name in ('食堂', '寢室', '校區基礎設施')
+      or st in ('in_progress', 'resolved')
+      or author = auth.uid();
+$$;
+create function post_visible(pid bigint) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from posts p join categories c on c.id = p.category_id
+                 where p.id = pid and p.moderation is distinct from 'hidden'
+                   and post_visible_to_me(c.name, p.status, p.author_id));
+$$;
 create policy "已審核可看回覆" on replies for select
-  using (is_staff() or (is_approved() and post_not_hidden(post_id)));
+  using (is_staff() or (is_approved() and post_visible(post_id)));
 create policy "權益部回覆" on replies for insert
   with check (is_staff() and staff_id = auth.uid());
 
 -- me_too
 create policy "看自己的" on me_too for select using (user_id = auth.uid());
 create policy "按我也遇到" on me_too for insert
-  with check (is_approved() and user_id = auth.uid());
+  with check (is_approved() and user_id = auth.uid() and (is_staff() or post_visible(post_id)));
 create policy "取消我也遇到" on me_too for delete using (user_id = auth.uid());
 
 -- change_requests
@@ -208,7 +224,8 @@ join categories c on c.id = p.category_id
 cross join lateral (
   select p.moderation = 'redacted' and p.author_id is distinct from auth.uid() and not is_staff() as masked
 ) v
-where is_approved() and p.moderation is distinct from 'hidden';
+where is_approved() and p.moderation is distinct from 'hidden'
+  and (is_staff() or post_visible_to_me(c.name, p.status, p.author_id));
 
 revoke all on post_feed from anon;
 grant select on post_feed to authenticated;
