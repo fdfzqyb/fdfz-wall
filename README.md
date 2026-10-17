@@ -17,15 +17,21 @@
 5. **Authentication → URL Configuration**：Site URL 填網站網址（本機測試時是 `http://localhost:5173`，上線後改成 Cloudflare 給的 `xxx.pages.dev`）。
 6. 正式開放註冊前，到 **Authentication → Emails → SMTP Settings** 接一個寄信服務（例如 Resend）。Supabase 內建的寄信每小時只能寄很少封。
 
-### 建立第一個權益部帳號
+### 建立超級管理員帳號
+
+網站有三種身份：普通同學、權益部、超級管理員。超級管理員擁有權益部的全部權限，另外只有他能把別人升為權益部或降回普通同學，也能在站內看到所有用戶的資料。
 
 先在網站上正常註冊，然後到 SQL Editor 執行（把學號換成你的）：
 
 ```sql
-update profiles set role = 'staff', verify_status = 'approved' where student_id = '你的學號';
+update profiles set role = 'admin', verify_status = 'approved' where student_id = '你的學號';
 ```
 
-之後其他同學的帳號由權益部在網站的「權益部」頁面審核。要把某位同學升為權益部，同樣在 SQL Editor 把他的 `role` 改成 `staff`。
+之後在網站的「權益部」頁 →「用戶管理」就能設定誰是權益部。權益部只能審核新帳號，不能改任何人的身份。
+
+### 已經用舊版 schema.sql 建好資料庫？
+
+到 SQL Editor 執行一次 [`supabase/migrations/002_super_admin.sql`](supabase/migrations/002_super_admin.sql)，再單獨執行上面那句把自己設為 admin。
 
 ## 在自己電腦上執行
 
@@ -61,4 +67,5 @@ Cloudflare 控制台 → Workers & Pages → 建立 → Pages → 連接 GitHub�
 | 問題詳情、回覆、申請刪除 | `/posts/:id` | 已審核同學 |
 | 我的帖子 | `/mine` | 已審核同學 |
 | 通知、對權益部的建議 | `/notifications` | 已審核同學 |
-| 權益部後台（帳號審核、修改刪除審批、同學建議） | `/admin` | 權益部 |
+| 權益部後台（帳號審核、修改刪除審批、同學建議） | `/admin` | 權益部、管理員 |
+| 用戶管理（所有用戶資料、設定權益部） | `/admin` 的「用戶管理」 | 只有管理員 |
