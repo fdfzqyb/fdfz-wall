@@ -1,0 +1,56 @@
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { signIn, loadProfile, isApproved } from '../auth'
+
+const router = useRouter()
+const account = ref('')
+const password = ref('')
+const error = ref('')
+const busy = ref(false)
+
+async function submit() {
+  error.value = ''
+  busy.value = true
+  const msg = await signIn(account.value, password.value)
+  if (msg) {
+    error.value = msg
+    busy.value = false
+    return
+  }
+  await loadProfile()
+  busy.value = false
+  router.replace(isApproved() ? '/' : '/pending')
+}
+</script>
+
+<template>
+  <div class="page login">
+    <img src="/logo.jpg" alt="權益部 logo" class="logo" />
+    <h1 class="center">fdfz權益牆</h1>
+    <p class="center muted">把校園生活裡遇到的問題告訴權益部。<br />僅限本校已驗證的同學登入。</p>
+
+    <form class="stack" @submit.prevent="submit">
+      <label class="field">
+        <span>學號或 Email</span>
+        <input v-model="account" autocomplete="username" required />
+      </label>
+      <label class="field">
+        <span>密碼</span>
+        <input v-model="password" type="password" autocomplete="current-password" required />
+      </label>
+      <p v-if="error" class="error">{{ error }}</p>
+      <button class="btn block" :disabled="busy">{{ busy ? '登入中…' : '登入' }}</button>
+    </form>
+
+    <p class="center muted" style="margin-top: 40px">還沒有帳號？</p>
+    <router-link to="/register" class="btn ghost block">註冊新帳號</router-link>
+    <p class="center muted small">註冊需經權益部審核，通過後才能瀏覽和發帖。</p>
+  </div>
+</template>
+
+<style scoped>
+.login { padding-top: 40px; }
+.logo { display: block; width: 168px; height: 168px; margin: 0 auto 20px; border-radius: 24px; object-fit: cover; }
+h1 { font-size: 30px; }
+</style>

@@ -1,0 +1,57 @@
+import { reactive } from 'vue'
+import { supabase } from './supabase'
+
+// 全站共用的登入狀態：session 是 Supabase 的登入資訊，profile 是 profiles 表裡自己那一筆
+export const auth = reactive({
+  ready: false,
+  session: null,
+  profile: null,
+})
+
+export async function loadProfile() {
+  if (!auth.session) {
+    auth.profile = null
+    return
+  }
+  const { data } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', auth.session.user.id)
+    .maybeSingle()
+  auth.profile = data
+}
+
+export async function initAuth() {
+  const { data } = await supabase.auth.getSession()
+  auth.session = data.session
+  await loadProfile()
+  auth.ready = true
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    auth.session = session
+    // 不能在這個回呼裡直接 await Supabase 查詢，所以放到下一輪執行
+    setTimeout(loadProfile, 0)
+  })
+}
+
+export const isApproved = () => auth.profile?.verify_status === 'approved'
+export const isStaff = () => isApproved() && auth.profile?.role === 'staff'
+
+// 輸入八位數字當學號，否則當 email
+export async function signIn(account, password) {
+  let email = account.trim()
+  if (/^\d{8}$/.test(email)) {
+    const { data, error } = await supabase.rpc('login_email', { sid: email, pw: password })
+    if (error || !data) return '學號或密碼錯誤'
+    email = data
+  }
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  if (!error) return null
+  if (error.message.includes('Email not confirmed')) return '請先到信箱點擊驗證連結'
+  return '帳號或密碼錯誤'
+}
+
+export async function signOut() {
+  await supabase.auth.signOut()
+  auth.profile = null
+}
