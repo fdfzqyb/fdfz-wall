@@ -45,13 +45,15 @@ npm run dev            # 瀏覽器打開它顯示的網址
 
 `.env` 的兩個值在 Supabase 後台 **Project Settings → API Keys**：專案網址，以及 publishable（或 anon）key。**不要**用 secret / service_role key。
 
-## 部署到 Cloudflare Pages
+## 部署到 Cloudflare
 
-Cloudflare 控制台 → Workers & Pages → 建立 → Pages → 連接 GitHub，選這個 repository：
+Supabase 的網址和 publishable key 已經寫在 [`.env.production`](.env.production)，部署時不需要另外設定環境變數。換 Supabase 專案時改這個檔案就好。
+
+Cloudflare 控制台 → Workers & Pages → 建立 → 連接 GitHub，選這個 repository：
 
 - Build command：`npm run build`
-- Build output directory：`dist`
-- 環境變數：`VITE_SUPABASE_URL`、`VITE_SUPABASE_KEY`（跟 `.env` 一樣）
+- Deploy command：`npx wrangler deploy`（預設值）
+- Worker 名稱要跟 [`wrangler.jsonc`](wrangler.jsonc) 裡的 `name`（`fdfz-wall`）一樣
 
 之後每次推到 `main` 都會自動重新部署。
 
