@@ -11,6 +11,7 @@ const routes = [
   { path: '/new', component: () => import('./views/NewPostView.vue') },
   { path: '/posts/:id', component: () => import('./views/PostDetailView.vue') },
   { path: '/notifications', component: () => import('./views/NotificationsView.vue') },
+  { path: '/account', component: () => import('./views/AccountView.vue') },
   { path: '/admin', component: () => import('./views/AdminView.vue'), meta: { staff: true } },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
