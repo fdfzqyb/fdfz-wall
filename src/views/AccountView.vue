@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../supabase'
-import { auth, signOut } from '../auth'
+import { auth, signOut, loadProfile } from '../auth'
 import TabBar from '../components/TabBar.vue'
 
 const router = useRouter()
@@ -33,6 +33,10 @@ async function changePassword() {
   const { error: failed } = await supabase.auth.updateUser({ password: next.value })
   saving.value = false
   if (failed) return (error.value = failed.message.includes('different') ? '新密碼不能和舊密碼一樣' : '修改失敗，請稍後再試')
+  if (auth.profile?.must_change_password) {
+    await supabase.rpc('password_changed')
+    await loadProfile()
+  }
   current.value = next.value = again.value = ''
   message.value = '密碼已修改，下次請用新密碼登入'
 }
@@ -53,10 +57,12 @@ async function logout() {
       <div><span class="muted">身份</span><b>{{ ROLE_LABEL[profile.role] }}</b></div>
     </div>
 
+    <p v-if="profile.must_change_password" class="note">你正在使用權益部給的臨時密碼，請先改成自己的密碼，才能使用其他功能。</p>
+
     <form class="card stack" @submit.prevent="changePassword">
       <h2>修改密碼</h2>
       <label class="field">
-        <span>目前密碼</span>
+        <span>{{ profile.must_change_password ? '臨時密碼' : '目前密碼' }}</span>
         <input v-model="current" type="password" autocomplete="current-password" required />
       </label>
       <label class="field">

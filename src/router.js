@@ -29,6 +29,8 @@ router.beforeEach(async (to) => {
   if (to.meta.public) return true
   if (!auth.session) return '/login'
   if (!isApproved()) return '/pending'
+  // 權益部重設成臨時密碼後，要先改成自己的密碼才能用其他頁面
+  if (auth.profile?.must_change_password && to.path !== '/account') return '/account'
   if (to.meta.staff && !isStaff()) return '/'
   return true
 })
