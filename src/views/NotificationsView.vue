@@ -23,7 +23,7 @@ const posting = ref(false)
 const postError = ref('')
 
 async function loadAnnouncements() {
-  const { data } = await supabase.from('announcements').select('*')
+  const { data } = await supabase.from('gonggao').select('*')
     .order('pinned', { ascending: false }).order('created_at', { ascending: false })
   announcements.value = data ?? []
 }
@@ -37,7 +37,7 @@ async function publish() {
   }
   posting.value = true
   postError.value = ''
-  const { error } = await supabase.from('announcements')
+  const { error } = await supabase.from('gonggao')
     .insert({ title: title.trim(), body: body.trim(), audience, pinned })
   posting.value = false
   if (error) {
@@ -55,7 +55,7 @@ const canDelete = (a) => isAdmin() || a.author_id === auth.session?.user.id
 
 async function removeAnnouncement(a) {
   if (!window.confirm(`確定刪除公告「${a.title}」？`)) return
-  const { error } = await supabase.from('announcements').delete().eq('id', a.id)
+  const { error } = await supabase.from('gonggao').delete().eq('id', a.id)
   if (!error) announcements.value = announcements.value.filter((x) => x.id !== a.id)
 }
 
