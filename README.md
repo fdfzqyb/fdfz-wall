@@ -33,6 +33,10 @@ update profiles set role = 'admin', verify_status = 'approved' where student_id 
 
 到 SQL Editor 執行一次 [`supabase/migrations/002_super_admin.sql`](supabase/migrations/002_super_admin.sql)，再單獨執行上面那句把自己設為 admin。
 
+### 加上刪除未通過的註冊
+
+已經建好的資料庫，到 SQL Editor 執行一次 [`supabase/migrations/006_delete_unapproved.sql`](supabase/migrations/006_delete_unapproved.sql)。權益部可以在後台「帳號審核」刪除待審核的註冊，管理員可以在「用戶管理」刪除任何未通過的帳號，同學自己也能在審核頁刪掉這次註冊。刪除後同一個學號和 email 可以重新註冊。已通過的帳號不能這樣刪。
+
 ### 加上敏感帖子處理
 
 已經建好的資料庫，到 SQL Editor 執行一次 [`supabase/migrations/005_moderation.sql`](supabase/migrations/005_moderation.sql)。權益部在問題詳情頁最下面可以申請「隱藏」（暴力、色情、恐嚇、辱罵）或「涉及個人信息」，另一位權益部到後台「敏感帖子」確認後才生效。

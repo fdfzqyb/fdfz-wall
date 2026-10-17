@@ -39,6 +39,17 @@ async function review(p, approve) {
   message.value = `已${approve ? '通過' : '拒絕'} ${p.full_name}，照片已刪除`
 }
 
+// 刪除未通過審核的帳號，讓同學可以用同一個學號和 email 重新註冊
+async function removeAccount(p) {
+  if (!window.confirm(`確定刪除 ${p.full_name}（${p.student_id}）的註冊？對方需要重新註冊。`)) return
+  await supabase.storage.from('id-cards').remove([`${p.id}/card.jpg`])
+  const { error } = await supabase.rpc('delete_unapproved_account', { target: p.id })
+  if (error) return (message.value = error.message)
+  accounts.value = accounts.value.filter((a) => a.id !== p.id)
+  users.value = users.value.filter((u) => u.id !== p.id)
+  message.value = `已刪除 ${p.full_name} 的註冊，對方可以重新註冊`
+}
+
 async function loadRequests() {
   const { data } = await supabase.from('change_requests')
     .select('*, posts(title, problem, suggestion, expected, help_offer)')
@@ -128,6 +139,7 @@ onMounted(() => Promise.all([
         <div class="actions">
           <button class="btn" :disabled="!p.photo" @click="review(p, true)">通過</button>
           <button class="btn danger" @click="review(p, false)">拒絕</button>
+          <button class="btn plain" @click="removeAccount(p)">刪除註冊</button>
         </div>
       </div>
     </template>
@@ -194,10 +206,13 @@ onMounted(() => Promise.all([
           <p class="muted small">{{ u.email }} · {{ STATUS_LABEL[u.verify_status] }} · {{ formatDate(u.created_at) }}</p>
         </div>
         <span v-if="u.role === 'admin' || u.id === auth.session.user.id" class="muted small">{{ ROLE_LABEL[u.role] }}</span>
-        <select v-else :value="u.role" @change="changeRole(u, $event.target.value)">
-          <option value="student">普通同學</option>
-          <option value="staff">權益部</option>
-        </select>
+        <div v-else class="user-actions">
+          <select :value="u.role" @change="changeRole(u, $event.target.value)">
+            <option value="student">普通同學</option>
+            <option value="staff">權益部</option>
+          </select>
+          <button v-if="u.role === 'student' && u.verify_status !== 'approved'" class="btn small danger" @click="removeAccount(u)">刪除</button>
+        </div>
       </div>
     </template>
   </div>
@@ -207,6 +222,7 @@ onMounted(() => Promise.all([
 <style scoped>
 .user { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .user p { margin: 2px 0 0; }
+.user-actions { display: flex; gap: 8px; align-items: center; flex: none; }
 .user select { width: auto; flex: none; }
 .card-photo { width: 100%; border-radius: 10px; }
 .actions { display: flex; gap: 10px; }
