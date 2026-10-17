@@ -6,5 +6,7 @@
     "directory": "./dist",
     // 讓 /login、/posts/123 這類網址重新整理時也回到網站，而不是 404
     "not_found_handling": "single-page-application"
-  }
+  },
+  // PR 的預覽建置（npx wrangler preview）需要這個區塊，留空即可
+  "previews": {}
 }
