@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n'
 import { ref } from 'vue'
 import { supabase } from '../supabase'
 import Icon from './Icon.vue'
@@ -24,6 +25,6 @@ async function toggle() {
 
 <template>
   <button type="button" class="metoo" :class="{ on: post.me_too_by_me }" @click.stop.prevent="toggle">
-    <Icon name="metoo" :size="18" /> 我也遇到 {{ post.me_too_count }}
+    <Icon name="metoo" :size="18" /> {{ t('我也遇到') }} {{ post.me_too_count }}
   </button>
 </template>

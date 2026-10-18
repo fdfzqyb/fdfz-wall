@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { signIn, loadProfile, isApproved } from '../auth'
@@ -26,27 +27,27 @@ async function submit() {
 
 <template>
   <div class="page login">
-    <img src="/logo.jpg" alt="權益部 logo" class="logo" />
-    <h1 class="center">fdfz權益牆</h1>
-    <p class="center muted">把校園生活裡遇到的問題告訴權益部。<br />僅限本校已驗證的同學登入。</p>
+    <img src="/logo.jpg" :alt="t('權益部 logo')" class="logo" />
+    <h1 class="center">{{ t('fdfz權益牆') }}</h1>
+    <p class="center muted">{{ t('把校園生活裡遇到的問題告訴權益部。') }}<br />{{ t('僅限本校已驗證的同學登入。') }}</p>
 
     <form class="stack" @submit.prevent="submit">
       <label class="field">
-        <span>學號或 Email</span>
+        <span>{{ t('學號或 Email') }}</span>
         <input v-model="account" autocomplete="username" required />
       </label>
       <label class="field">
-        <span>密碼</span>
+        <span>{{ t('密碼') }}</span>
         <input v-model="password" type="password" autocomplete="current-password" required />
       </label>
-      <p v-if="error" class="error">{{ error }}</p>
-      <button class="btn block" :disabled="busy">{{ busy ? '登入中…' : '登入' }}</button>
+      <p v-if="error" class="error">{{ t(error) }}</p>
+      <button class="btn block" :disabled="busy">{{ busy ? t('登入中…') : t('登入') }}</button>
     </form>
-    <p class="center muted small">忘記密碼？請帶校園卡找權益部重設。</p>
+    <p class="center muted small">{{ t('忘記密碼？請帶校園卡找權益部重設。') }}</p>
 
-    <p class="center muted" style="margin-top: 40px">還沒有帳號？</p>
-    <router-link to="/register" class="btn ghost block">註冊新帳號</router-link>
-    <p class="center muted small">註冊需經權益部審核，通過後才能瀏覽和發帖。</p>
+    <p class="center muted" style="margin-top: 40px">{{ t('還沒有帳號？') }}</p>
+    <router-link to="/register" class="btn ghost block">{{ t('註冊新帳號') }}</router-link>
+    <p class="center muted small">{{ t('註冊需經權益部審核，通過後才能瀏覽和發帖。') }}</p>
   </div>
 </template>
 

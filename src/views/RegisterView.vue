@@ -1,4 +1,5 @@
 <script setup>
+import { t, message as uiMessage } from '../i18n'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../supabase'
@@ -39,7 +40,10 @@ async function submit() {
         data: { full_name: f.name.trim(), student_id: f.sid },
       },
     })
-    if (signUpError) throw new Error('註冊失敗：' + signUpError.message)
+    if (signUpError) {
+      error.value = uiMessage('註冊失敗：{error}', { error: signUpError.message })
+      return
+    }
     // email 已被用過時，Supabase 不會報錯，而是回傳一個沒有 identities 的帳號
     if (!data.user || data.user.identities?.length === 0) {
       throw new Error('這個 email 已經註冊過')
@@ -51,7 +55,8 @@ async function submit() {
       .from('id-cards')
       .upload(`${data.user.id}/card.jpg`, blob, { contentType: 'image/jpeg' })
     if (uploadError) {
-      throw new Error('帳號已建立，但照片上傳失敗，請登入後在等待頁重新上傳（' + uploadError.message + '）')
+      error.value = uiMessage('帳號已建立，但照片上傳失敗，請登入後在等待頁重新上傳（{error}）', { error: uploadError.message })
+      return
     }
 
     sessionStorage.setItem('registered', JSON.stringify({ name: f.name, sid: f.sid, email: f.email }))
@@ -66,46 +71,46 @@ async function submit() {
 
 <template>
   <header class="topbar">
-    <button class="back" aria-label="返回" @click="router.back()"><Icon name="back" :size="24" /></button>
-    <h1>註冊新帳號</h1>
+    <button class="back" :aria-label="t('返回')" @click="router.back()"><Icon name="back" :size="24" /></button>
+    <h1>{{ t('註冊新帳號') }}</h1>
   </header>
   <form class="page stack" @submit.prevent="submit">
-    <p class="muted">填寫資料並上傳校園卡照片。經權益部審核後，帳號才會開通。</p>
-    <label class="field"><span>姓名</span><input v-model="form.name" required /></label>
+    <p class="muted">{{ t('填寫資料並上傳校園卡照片。經權益部審核後，帳號才會開通。') }}</p>
+    <label class="field"><span>{{ t('姓名') }}</span><input v-model="form.name" required /></label>
     <label class="field">
-      <span>學號</span>
+      <span>{{ t('學號') }}</span>
       <input v-model="form.sid" inputmode="numeric" maxlength="8" required />
-      <small>8 位數字，也可以用來登入</small>
+      <small>{{ t('8 位數字，也可以用來登入') }}</small>
     </label>
     <label class="field">
       <span>Email</span>
       <input v-model="form.email" type="email" autocomplete="email" required />
-      <small>任何信箱都可以，用來登入</small>
+      <small>{{ t('任何信箱都可以，用來登入') }}</small>
     </label>
     <label class="field">
-      <span>密碼</span>
+      <span>{{ t('密碼') }}</span>
       <input v-model="form.password" type="password" autocomplete="new-password" required />
-      <small>至少 8 個字元</small>
+      <small>{{ t('至少 8 個字元') }}</small>
     </label>
     <label class="field">
-      <span>確認密碼</span>
+      <span>{{ t('確認密碼') }}</span>
       <input v-model="form.password2" type="password" autocomplete="new-password" required />
     </label>
     <label class="field">
-      <span>校園卡照片</span>
+      <span>{{ t('校園卡照片') }}</span>
       <div class="upload">
-        <img v-if="preview" :src="preview" alt="校園卡預覽" />
+        <img v-if="preview" :src="preview" :alt="t('校園卡預覽')" />
         <template v-else>
           <Icon name="camera" :size="32" />
-          <strong>拍照或選擇照片</strong>
-          <small class="muted">需看清姓名和學號</small>
+          <strong>{{ t('拍照或選擇照片') }}</strong>
+          <small class="muted">{{ t('需看清姓名和學號') }}</small>
         </template>
         <input type="file" accept="image/*" @change="pickPhoto" />
       </div>
     </label>
-    <p class="note"><Icon name="lock" :size="18" />照片只有權益部審核時看得到，審核完成後會自動刪除。</p>
-    <p v-if="error" class="error">{{ error }}</p>
-    <button class="btn block" :disabled="busy">{{ busy ? '提交中…' : '提交註冊' }}</button>
+    <p class="note"><Icon name="lock" :size="18" />{{ t('照片只有權益部審核時看得到，審核完成後會自動刪除。') }}</p>
+    <p v-if="error" class="error">{{ t(error) }}</p>
+    <button class="btn block" :disabled="busy">{{ busy ? t('提交中…') : t('提交註冊') }}</button>
   </form>
 </template>
 

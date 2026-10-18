@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n'
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase } from '../supabase'
@@ -23,12 +24,12 @@ watch(() => route.fullPath, loadUnread, { immediate: true })
 
 <template>
   <nav class="tabbar">
-    <router-link to="/"><span class="icon"><Icon name="home" :size="24" /></span>首頁</router-link>
-    <router-link to="/mine"><span class="icon"><Icon name="posts" :size="24" /></span>我的帖子</router-link>
+    <router-link to="/"><span class="icon"><Icon name="home" :size="24" /></span>{{ t('首頁') }}</router-link>
+    <router-link to="/mine"><span class="icon"><Icon name="posts" :size="24" /></span>{{ t('我的帖子') }}</router-link>
     <router-link to="/notifications">
-      <span class="icon"><Icon name="bell" :size="24" /><span v-if="unread" class="badge">{{ unread }}</span></span>通知
+      <span class="icon"><Icon name="bell" :size="24" /><span v-if="unread" class="badge">{{ unread }}</span></span>{{ t('通知') }}
     </router-link>
-    <router-link v-if="isStaff()" to="/admin"><span class="icon"><Icon name="review" :size="24" /></span>權益部</router-link>
-    <router-link to="/account"><span class="icon"><Icon name="user" :size="24" /></span>帳號</router-link>
+    <router-link v-if="isStaff()" to="/admin"><span class="icon"><Icon name="review" :size="24" /></span>{{ t('權益部') }}</router-link>
+    <router-link to="/account"><span class="icon"><Icon name="user" :size="24" /></span>{{ t('帳號') }}</router-link>
   </nav>
 </template>

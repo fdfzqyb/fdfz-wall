@@ -1,17 +1,24 @@
 <script setup>
+import { watch } from 'vue'
+import { locale, t } from './i18n'
 import { auth } from './auth'
 
 const reload = () => window.location.reload()
+
+watch(locale, (value) => {
+  document.documentElement.lang = value
+  document.title = t('fdfz權益牆')
+}, { immediate: true })
 </script>
 
 <template>
   <router-view v-if="auth.ready" />
   <div v-else class="boot">
     <img src="/logo.jpg" alt="" class="boot-logo" />
-    <p v-if="!auth.error" class="muted">載入中…</p>
+    <p v-if="!auth.error" class="muted">{{ t('載入中…') }}</p>
     <template v-else>
-      <p>{{ auth.error }}</p>
-      <button class="btn" @click="reload">重新整理</button>
+      <p>{{ t(auth.error) }}</p>
+      <button class="btn" @click="reload">{{ t('重新整理') }}</button>
     </template>
   </div>
 </template>

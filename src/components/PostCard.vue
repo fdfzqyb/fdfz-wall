@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n'
 import { STATUS, formatDate } from '../constants'
 import MeTooButton from './MeTooButton.vue'
 
@@ -8,16 +9,16 @@ defineProps({ post: { type: Object, required: true } })
 <template>
   <router-link :to="`/posts/${post.id}`" class="card post-card">
     <div class="row">
-      <span class="muted small">{{ post.category_name }} · {{ formatDate(post.created_at) }}</span>
-      <span class="status" :class="STATUS[post.status].cls">{{ STATUS[post.status].label }}</span>
+      <span class="muted small">{{ t(post.category_name) }} · {{ formatDate(post.created_at) }}</span>
+      <span class="status" :class="STATUS[post.status].cls">{{ t(STATUS[post.status].label) }}</span>
     </div>
     <!-- 涉及個人信息的帖子：其他同學拿到的是提示文字（沒有可行建議），發布者和權益部看到原文加標註 -->
     <h3 :class="{ masked: post.moderation === 'redacted' && post.suggestion === null }">
-      <span v-if="post.moderation === 'redacted' && post.suggestion !== null" class="tag">涉敏</span>{{ post.title }}
+      <span v-if="post.moderation === 'redacted' && post.suggestion !== null" class="tag">{{ t('涉敏') }}</span>{{ post.moderation === 'redacted' && post.suggestion === null ? t(post.title) : post.title }}
     </h3>
-    <p class="excerpt">{{ post.problem }}</p>
+    <p class="excerpt">{{ post.moderation === 'redacted' && post.suggestion === null ? t(post.problem) : post.problem }}</p>
     <div class="row">
-      <span class="muted small">{{ post.has_reply ? '權益部已回覆' : '尚無回覆' }}</span>
+      <span class="muted small">{{ post.has_reply ? t('權益部已回覆') : t('尚無回覆') }}</span>
       <MeTooButton :post="post" @click.prevent />
     </div>
   </router-link>
