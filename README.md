@@ -14,7 +14,7 @@
 4. **Authentication → Sign In / Providers → Email**：
    - 關掉 Confirm email（同學註冊後直接登入，不用點驗證信；身份由權益部看學生證審核）
    - Minimum password length 設為 8
-5. **Authentication → URL Configuration**：Site URL 填網站網址（本機測試時是 `http://localhost:5173`，上線後改成 Cloudflare 給的 `xxx.pages.dev`）。
+5. **Authentication → URL Configuration**：Site URL 填網站網址（本機測試時是 `http://localhost:5173`，上線後改成 Cloudflare 給的 `xxx.workers.dev`；綁定自己的域名後改成新網址，並把新網址加進 Redirect URLs）。
 6. 關掉驗證信後，網站平常不寄信。以後如果加上「忘記密碼」，再到 **Authentication → Emails → SMTP Settings** 接一個寄信服務（例如 Resend）。
 
 ### 建立超級管理員帳號
