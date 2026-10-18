@@ -16,6 +16,7 @@ const post = ref(null)
 const replies = ref([])
 const author = ref(null)        // 只有權益部拿得到
 const pendingRequest = ref(null) // 自己的問題有沒有等待中的修改 / 刪除申請
+const needsApproval = ref(true)  // 權益部回覆過、已在處理等情況，修改刪除要權益部同意
 const confirmDelete = ref(false)
 const replyText = ref('')
 const message = ref('')
@@ -37,6 +38,8 @@ async function load() {
     const { data } = await supabase.from('change_requests')
       .select('kind').eq('post_id', id).eq('status', 'pending').maybeSingle()
     pendingRequest.value = data
+    const { data: needs } = await supabase.rpc('post_needs_approval', { pid: id })
+    needsApproval.value = needs !== false
   }
   if (isStaff()) {
     const { data } = await supabase.from('posts')
@@ -49,11 +52,14 @@ async function load() {
   loading.value = false
 }
 
-async function requestDelete() {
-  const { error } = await supabase.from('change_requests').insert({ post_id: id, kind: 'delete' })
+async function deletePost() {
+  const { data, error } = await supabase.rpc('change_my_post', { pid: id, k: 'delete' })
   confirmDelete.value = false
-  message.value = error ? '送出失敗，請稍後再試' : '刪除申請已送出，等權益部同意後就會刪除'
-  if (!error) pendingRequest.value = { kind: 'delete' }
+  if (error) return (message.value = error.message || '送出失敗，請稍後再試')
+  if (data === 'applied') return router.replace('/mine')
+  message.value = '刪除申請已送出，等權益部同意後就會刪除'
+  pendingRequest.value = { kind: 'delete' }
+  needsApproval.value = true
 }
 
 async function changeStatus(e) {
@@ -159,11 +165,12 @@ onMounted(load)
           {{ t('{kind}申請審核中，權益部同意後才會生效。', { kind: t(pendingRequest.kind === 'edit' ? '修改' : '刪除') }) }}
         </p>
         <template v-else>
-          <p class="muted small">{{ t('修改或刪除需要權益部同意。') }}</p>
+          <p v-if="needsApproval" class="muted small">{{ t('權益部已經開始處理這個問題，修改或刪除需要權益部同意。') }}</p>
+          <p v-else class="muted small">{{ t('權益部還沒開始處理，修改或刪除會直接生效。') }}</p>
           <div class="actions">
-            <router-link :to="`/new?edit=${id}`" class="btn ghost">{{ t('申請修改') }}</router-link>
-            <button v-if="!confirmDelete" class="btn danger" @click="confirmDelete = true">{{ t('申請刪除') }}</button>
-            <button v-else class="btn danger" @click="requestDelete">{{ t('確定申請刪除') }}</button>
+            <router-link :to="`/new?edit=${id}`" class="btn ghost">{{ needsApproval ? t('申請修改') : t('修改') }}</router-link>
+            <button v-if="!confirmDelete" class="btn danger" @click="confirmDelete = true">{{ needsApproval ? t('申請刪除') : t('刪除') }}</button>
+            <button v-else class="btn danger" @click="deletePost">{{ needsApproval ? t('確定申請刪除') : t('確定刪除') }}</button>
           </div>
         </template>
       </div>
