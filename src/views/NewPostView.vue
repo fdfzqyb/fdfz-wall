@@ -7,13 +7,14 @@ import Icon from '../components/Icon.vue'
 
 const route = useRoute()
 const router = useRouter()
-// 帶 ?edit=問題id 時是「申請修改」，送出的是 change_requests 而不是直接改 posts
+// 帶 ?edit=問題id 時是修改：交給 change_my_post，資料庫決定直接生效還是送出申請
 const editId = route.query.edit ? Number(route.query.edit) : null
 
 const categories = ref([])
 const form = ref({ category_id: '', title: '', problem: '', suggestion: '', expected: '', help_offer: '' })
 const error = ref('')
 const busy = ref(false)
+const needsApproval = ref(true)
 
 onMounted(async () => {
   const { data } = await supabase.from('categories').select('*').order('sort_order')
@@ -26,6 +27,8 @@ onMounted(async () => {
         suggestion: p.suggestion, expected: p.expected, help_offer: p.help_offer ?? '',
       }
     }
+    const { data: needs } = await supabase.rpc('post_needs_approval', { pid: editId })
+    needsApproval.value = needs !== false
   }
 })
 
@@ -36,9 +39,9 @@ async function submit() {
   const helpOffer = f.help_offer.trim() || null
   let result
   if (editId) {
-    result = await supabase.from('change_requests').insert({
-      post_id: editId, kind: 'edit',
-      new_category_id: f.category_id, new_title: f.title.trim(), new_problem: f.problem.trim(),
+    result = await supabase.rpc('change_my_post', {
+      pid: editId, k: 'edit',
+      cat: f.category_id, new_title: f.title.trim(), new_problem: f.problem.trim(),
       new_suggestion: f.suggestion.trim(), new_expected: f.expected.trim(), new_help_offer: helpOffer,
     })
   } else {
@@ -49,7 +52,8 @@ async function submit() {
   }
   busy.value = false
   if (result.error) {
-    error.value = result.error.code === '23505' ? '這個問題已經有一個等待審批的申請' : '送出失敗，請稍後再試'
+    error.value = result.error.code === '23505' ? '這個問題已經有一個等待審批的申請'
+      : editId && result.error.message ? result.error.message : '送出失敗，請稍後再試'
     return
   }
   router.replace(editId ? `/posts/${editId}` : `/posts/${result.data.id}`)
@@ -59,10 +63,10 @@ async function submit() {
 <template>
   <header class="topbar">
     <button class="back" :aria-label="t('返回')" @click="router.back()"><Icon name="back" :size="24" /></button>
-    <h1>{{ editId ? t('申請修改問題') : t('發布問題') }}</h1>
+    <h1>{{ editId ? (needsApproval ? t('申請修改問題') : t('修改問題')) : t('發布問題') }}</h1>
   </header>
   <form class="page stack" @submit.prevent="submit">
-    <p v-if="editId" class="note">{{ t('修改需要權益部同意後才會生效。') }}</p>
+    <p v-if="editId" class="note">{{ needsApproval ? t('修改需要權益部同意後才會生效。') : t('權益部還沒開始處理，修改後馬上生效。') }}</p>
     <p v-else class="note"><Icon name="eye" :size="18" />{{ t('其他同學看不到你的姓名和學號，只有權益部看得到。') }}</p>
     <label class="field">
       <span>{{ t('問題分類') }}</span>
@@ -92,6 +96,6 @@ async function submit() {
       <textarea v-model="form.help_offer" :placeholder="t('如果解決這個問題需要你的幫助，你願意做些什麼')" />
     </label>
     <p v-if="error" class="error">{{ t(error) }}</p>
-    <button class="btn block" :disabled="busy">{{ busy ? t('送出中…') : editId ? t('送出修改申請') : t('發布') }}</button>
+    <button class="btn block" :disabled="busy">{{ busy ? t('送出中…') : editId ? (needsApproval ? t('送出修改申請') : t('儲存修改')) : t('發布') }}</button>
   </form>
 </template>
