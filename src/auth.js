@@ -6,7 +6,12 @@ export const auth = reactive({
   ready: false,
   session: null,
   profile: null,
+  error: '', // 連不上 Supabase 時顯示給同學看的訊息
 })
+
+let markReady
+// 路由會等這個 Promise，確認完登入狀態才決定要去哪一頁
+export const authReady = new Promise((resolve) => (markReady = resolve))
 
 export async function loadProfile() {
   if (!auth.session) {
@@ -21,11 +26,31 @@ export async function loadProfile() {
   auth.profile = data
 }
 
-export async function initAuth() {
-  const { data } = await supabase.auth.getSession()
+async function loadSession() {
+  // 點驗證連結回來時，網址裡帶著登入憑證，getSession 會連到 Supabase 換成登入狀態
+  const { data, error } = await supabase.auth.getSession()
+  if (error) throw error
   auth.session = data.session
   await loadProfile()
+}
+
+export async function initAuth() {
+  // 網路很慢時不要一直空白：15 秒還沒好就先提示，之後連上了照樣會進站
+  const slow = setTimeout(() => {
+    auth.error = '連線很慢，還在嘗試連上伺服器…'
+  }, 15000)
+  try {
+    await loadSession()
+    auth.error = ''
+  } catch (e) {
+    console.error(e)
+    auth.error = '連不上伺服器，請檢查網路後重新整理。'
+    return
+  } finally {
+    clearTimeout(slow)
+  }
   auth.ready = true
+  markReady()
 
   supabase.auth.onAuthStateChange((_event, session) => {
     auth.session = session

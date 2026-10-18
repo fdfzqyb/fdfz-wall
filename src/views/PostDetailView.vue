@@ -3,8 +3,9 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../supabase'
 import { isStaff } from '../auth'
-import { STATUS, formatDate } from '../constants'
+import { STATUS, MODERATION_KIND, formatDate } from '../constants'
 import MeTooButton from '../components/MeTooButton.vue'
+import Icon from '../components/Icon.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -18,6 +19,10 @@ const confirmDelete = ref(false)
 const replyText = ref('')
 const message = ref('')
 const loading = ref(true)
+// 敏感內容處理（只有權益部用得到）
+const moderation = ref(null)      // 這個帖子等待確認的申請
+const modKind = ref('')
+const modReason = ref('')
 
 async function load() {
   const [{ data: p }, { data: r }] = await Promise.all([
@@ -36,6 +41,9 @@ async function load() {
     const { data } = await supabase.from('posts')
       .select('profiles(full_name, student_id)').eq('id', id).single()
     author.value = data?.profiles
+    const { data: m } = await supabase.from('moderation_requests')
+      .select('kind, reason, moderation_votes(staff_id)').eq('post_id', id).eq('status', 'pending').maybeSingle()
+    moderation.value = m
   }
   loading.value = false
 }
@@ -65,12 +73,21 @@ async function sendReply() {
   await load()
 }
 
+async function requestModeration() {
+  const { error } = await supabase.rpc('request_moderation', { pid: id, k: modKind.value, why: modReason.value })
+  if (error) return (message.value = error.message)
+  message.value = '已送出，需要另一位權益部在後台「敏感帖子」確認後才會生效'
+  modKind.value = ''
+  modReason.value = ''
+  await load()
+}
+
 onMounted(load)
 </script>
 
 <template>
   <header class="topbar">
-    <button class="back" @click="router.back()">‹</button>
+    <button class="back" aria-label="返回" @click="router.back()"><Icon name="back" :size="24" /></button>
     <h1>問題詳情</h1>
   </header>
   <div class="page">
@@ -83,10 +100,13 @@ onMounted(load)
           <span class="status" :class="STATUS[post.status].cls">{{ STATUS[post.status].label }}</span>
         </div>
         <h2>{{ post.title }}</h2>
-        <p v-if="author" class="note">發布者：{{ author.full_name }}（{{ author.student_id }}）</p>
+        <p v-if="author" class="note"><Icon name="user" :size="18" />發布者：{{ author.full_name }}（{{ author.student_id }}）</p>
+        <p v-if="post.moderation === 'redacted' && (post.is_mine || isStaff())" class="note warn">
+          涉及個人信息：其他同學看不到這個帖子的內容，只有發布者和權益部看得到。
+        </p>
         <section><h4>問題描述</h4><p>{{ post.problem }}</p></section>
-        <section><h4>可行建議</h4><p>{{ post.suggestion }}</p></section>
-        <section><h4>預期解決效果</h4><p>{{ post.expected }}</p></section>
+        <section v-if="post.suggestion"><h4>可行建議</h4><p>{{ post.suggestion }}</p></section>
+        <section v-if="post.expected"><h4>預期解決效果</h4><p>{{ post.expected }}</p></section>
         <section v-if="post.help_offer"><h4>願意付出的努力</h4><p>{{ post.help_offer }}</p></section>
         <div><MeTooButton :post="post" /></div>
       </div>
@@ -109,6 +129,28 @@ onMounted(load)
         <select :value="post.status" @change="changeStatus">
           <option v-for="(s, key) in STATUS" :key="key" :value="key">{{ s.label }}</option>
         </select>
+      </div>
+
+      <div v-if="isStaff()" class="card stack">
+        <h3>敏感內容處理</h3>
+        <template v-if="moderation">
+          <p class="note">
+            已申請「{{ MODERATION_KIND[moderation.kind].label }}」，原因：{{ moderation.reason }}。
+            已確認 {{ moderation.moderation_votes.length }}/2，請另一位權益部到後台「敏感帖子」確認。
+          </p>
+        </template>
+        <template v-else>
+          <p class="muted small">需要兩位權益部確認才會生效，你提出申請算第一位。</p>
+          <div class="chips">
+            <button type="button" class="chip" :class="{ on: modKind === 'hide' }" @click="modKind = 'hide'">隱藏</button>
+            <button v-if="post.moderation !== 'redacted'" type="button" class="chip" :class="{ on: modKind === 'redact' }" @click="modKind = 'redact'">涉及個人信息</button>
+          </div>
+          <template v-if="modKind">
+            <p class="muted small">{{ MODERATION_KIND[modKind].hint }}</p>
+            <textarea v-model="modReason" placeholder="原因（只有權益部看得到）" />
+            <button class="btn danger" @click="requestModeration">申請{{ MODERATION_KIND[modKind].label }}</button>
+          </template>
+        </template>
       </div>
 
       <div v-if="post.is_mine" class="card stack">
@@ -139,4 +181,5 @@ h4 { font-size: 14px; color: var(--muted); margin: 0 0 2px; }
 section p, .reply p { margin: 0; white-space: pre-wrap; }
 .reply { border-left: 3px solid var(--orange); padding-left: 12px; }
 .actions { display: flex; gap: 10px; }
+.warn { background: #fde6d6; color: #a2531f; }
 </style>
