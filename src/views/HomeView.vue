@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n'
 import { ref, watch, onMounted } from 'vue'
 import { supabase } from '../supabase'
 import PostCard from '../components/PostCard.vue'
@@ -42,34 +43,34 @@ watch([category, sort], load, { immediate: true })
   <header class="home-head">
     <div class="brand">
       <img src="/logo.jpg" alt="" class="logo-sm" />
-      <h1>fdfz權益牆</h1>
+      <h1>{{ t('fdfz權益牆') }}</h1>
     </div>
     <label class="search">
       <Icon name="search" :size="20" />
-      <input v-model="search" type="search" placeholder="搜尋問題" />
+      <input v-model="search" type="search" :placeholder="t('搜尋問題')" />
     </label>
     <div class="chips">
-      <button class="chip" :class="{ on: !category }" @click="category = null">全部</button>
+      <button class="chip" :class="{ on: !category }" @click="category = null">{{ t('全部') }}</button>
       <button v-for="c in categories" :key="c.id" class="chip" :class="{ on: category === c.id }" @click="category = c.id">
-        <Icon v-if="CATEGORY_ICON[c.name]" :name="CATEGORY_ICON[c.name]" :size="16" />{{ c.name }}
+        <Icon v-if="CATEGORY_ICON[c.name]" :name="CATEGORY_ICON[c.name]" :size="16" />{{ t(c.name) }}
       </button>
     </div>
   </header>
   <div class="page">
     <div class="toolbar">
-      <span class="muted">共 {{ posts.length }} 個問題</span>
+      <span class="muted">{{ t('共 {count} 個問題', { count: posts.length }) }}</span>
       <div class="sort">
-        <button :class="{ on: sort === 'new' }" @click="sort = 'new'">最新</button>
-        <button :class="{ on: sort === 'hot' }" @click="sort = 'hot'">最多人遇到</button>
+        <button :class="{ on: sort === 'new' }" @click="sort = 'new'">{{ t('最新') }}</button>
+        <button :class="{ on: sort === 'hot' }" @click="sort = 'hot'">{{ t('最多人遇到') }}</button>
       </div>
     </div>
-    <p v-if="loading" class="muted center">載入中…</p>
-    <p v-else-if="!posts.length" class="muted center">還沒有問題，來發布第一個吧。</p>
+    <p v-if="loading" class="muted center">{{ t('載入中…') }}</p>
+    <p v-else-if="!posts.length" class="muted center">{{ t('還沒有問題，來發布第一個吧。') }}</p>
     <div class="stack">
       <PostCard v-for="p in posts" :key="p.id" :post="p" />
     </div>
   </div>
-  <router-link to="/new" class="btn fab"><Icon name="megaphone" :size="22" />發布問題</router-link>
+  <router-link to="/new" class="btn fab"><Icon name="megaphone" :size="22" />{{ t('發布問題') }}</router-link>
   <TabBar />
 </template>
 

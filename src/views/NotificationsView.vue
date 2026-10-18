@@ -1,4 +1,5 @@
 <script setup>
+import { t, translateNotification, message as uiMessage } from '../i18n'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../supabase'
@@ -42,7 +43,7 @@ async function publish() {
   posting.value = false
   if (error) {
     console.error(error)
-    postError.value = '發布失敗：' + error.message
+    postError.value = uiMessage('發布失敗：{error}', { error: error.message })
     return
   }
   postError.value = ''
@@ -54,7 +55,7 @@ async function publish() {
 const canDelete = (a) => isAdmin() || a.author_id === auth.session?.user.id
 
 async function removeAnnouncement(a) {
-  if (!window.confirm(`確定刪除公告「${a.title}」？`)) return
+  if (!window.confirm(t('確定刪除公告「{title}」？', { title: a.title }))) return
   const { error } = await supabase.from('gonggao').delete().eq('id', a.id)
   if (!error) announcements.value = announcements.value.filter((x) => x.id !== a.id)
 }
@@ -93,37 +94,37 @@ onMounted(() => {
 
 <template>
   <header class="topbar">
-    <h1>通知</h1>
-    <button class="btn plain small" @click="markAllRead">全部已讀</button>
+    <h1>{{ t('通知') }}</h1>
+    <button class="btn plain small" @click="markAllRead">{{ t('全部已讀') }}</button>
   </header>
   <div class="page stack">
     <button v-if="isStaff() && !composing" class="btn block" @click="composing = true">
-      <Icon name="megaphone" :size="20" /> 發布公告
+      <Icon name="megaphone" :size="20" /> {{ t('發布公告') }}
     </button>
 
     <form v-if="composing" class="card stack" @submit.prevent="publish">
-      <h3>發布公告</h3>
-      <input v-model="draft.title" placeholder="標題" maxlength="60" />
-      <textarea v-model="draft.body" placeholder="公告內容" />
+      <h3>{{ t('發布公告') }}</h3>
+      <input v-model="draft.title" :placeholder="t('標題')" maxlength="60" />
+      <textarea v-model="draft.body" :placeholder="t('公告內容')" />
       <div>
-        <p class="muted small">給誰看</p>
+        <p class="muted small">{{ t('給誰看') }}</p>
         <div class="chips">
-          <button type="button" class="chip" :class="{ on: draft.audience === 'all' }" @click="draft.audience = 'all'">全體用戶</button>
-          <button type="button" class="chip" :class="{ on: draft.audience === 'staff' }" @click="draft.audience = 'staff'">僅權益部</button>
+          <button type="button" class="chip" :class="{ on: draft.audience === 'all' }" @click="draft.audience = 'all'">{{ t('全體用戶') }}</button>
+          <button type="button" class="chip" :class="{ on: draft.audience === 'staff' }" @click="draft.audience = 'staff'">{{ t('僅權益部') }}</button>
         </div>
       </div>
       <div>
-        <p class="muted small">類型（短期通知兩週後自動消失）</p>
+        <p class="muted small">{{ t('類型（短期通知兩週後自動消失）') }}</p>
         <div class="chips">
-          <button type="button" class="chip" :class="{ on: draft.pinned }" @click="draft.pinned = true">長期置頂</button>
-          <button type="button" class="chip" :class="{ on: !draft.pinned }" @click="draft.pinned = false">短期兩週</button>
+          <button type="button" class="chip" :class="{ on: draft.pinned }" @click="draft.pinned = true">{{ t('長期置頂') }}</button>
+          <button type="button" class="chip" :class="{ on: !draft.pinned }" @click="draft.pinned = false">{{ t('短期兩週') }}</button>
         </div>
       </div>
       <div class="actions">
-        <button type="button" class="btn plain" @click="composing = false">取消</button>
-        <button class="btn" :disabled="posting">{{ posting ? '發布中…' : '發布' }}</button>
+        <button type="button" class="btn plain" @click="composing = false">{{ t('取消') }}</button>
+        <button class="btn" :disabled="posting">{{ posting ? t('發布中…') : t('發布') }}</button>
       </div>
-      <p v-if="postError" class="error">{{ postError }}</p>
+      <p v-if="postError" class="error">{{ t(postError) }}</p>
     </form>
 
     <article v-for="a in announcements" :key="'a' + a.id" class="card announcement" :class="{ pinned: a.pinned }">
@@ -133,27 +134,27 @@ onMounted(() => {
       </div>
       <p class="ann-body">{{ a.body }}</p>
       <div class="ann-meta muted small">
-        <span v-if="a.pinned" class="tag">置頂</span>
-        <span v-if="a.audience === 'staff'" class="tag">僅權益部</span>
+        <span v-if="a.pinned" class="tag">{{ t('置頂') }}</span>
+        <span v-if="a.audience === 'staff'" class="tag">{{ t('僅權益部') }}</span>
         <span>{{ formatDate(a.created_at) }}</span>
-        <span v-if="a.expires_at">· {{ formatDate(a.expires_at) }}後消失</span>
-        <button v-if="canDelete(a)" class="btn danger small del" @click="removeAnnouncement(a)">刪除</button>
+        <span v-if="a.expires_at">· {{ formatDate(a.expires_at) }}{{ t('後消失') }}</span>
+        <button v-if="canDelete(a)" class="btn danger small del" @click="removeAnnouncement(a)">{{ t('刪除') }}</button>
       </div>
     </article>
 
-    <p v-if="!items.length && !announcements.length" class="muted center">目前沒有通知。</p>
+    <p v-if="!items.length && !announcements.length" class="muted center">{{ t('目前沒有通知。') }}</p>
     <button v-for="n in items" :key="n.id" class="card item" :class="{ unread: !n.is_read }" @click="open(n)">
       <Icon :name="noticeIcon(n.message)" :size="22" class="kind" />
-      <span class="text">{{ n.message }}</span>
+      <span class="text">{{ translateNotification(n.message) }}</span>
       <span class="muted small">{{ formatDate(n.created_at) }}</span>
     </button>
 
     <form class="card stack" @submit.prevent="sendFeedback">
-      <h3>對權益部的工作有什麼建議？</h3>
-      <p class="muted small">權益部會看到你的姓名和學號。</p>
-      <textarea v-model="feedback" placeholder="寫下你的建議" />
-      <button class="btn">送出建議</button>
-      <p v-if="message" class="note">{{ message }}</p>
+      <h3>{{ t('對權益部的工作有什麼建議？') }}</h3>
+      <p class="muted small">{{ t('權益部會看到你的姓名和學號。') }}</p>
+      <textarea v-model="feedback" :placeholder="t('寫下你的建議')" />
+      <button class="btn">{{ t('送出建議') }}</button>
+      <p v-if="message" class="note">{{ t(message) }}</p>
     </form>
   </div>
   <TabBar />

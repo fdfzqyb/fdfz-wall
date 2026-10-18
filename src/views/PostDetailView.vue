@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../supabase'
@@ -87,88 +88,87 @@ onMounted(load)
 
 <template>
   <header class="topbar">
-    <button class="back" aria-label="返回" @click="router.back()"><Icon name="back" :size="24" /></button>
-    <h1>問題詳情</h1>
+    <button class="back" :aria-label="t('返回')" @click="router.back()"><Icon name="back" :size="24" /></button>
+    <h1>{{ t('問題詳情') }}</h1>
   </header>
   <div class="page">
-    <p v-if="loading" class="muted center">載入中…</p>
-    <p v-else-if="!post" class="muted center">找不到這個問題，可能已被刪除。</p>
+    <p v-if="loading" class="muted center">{{ t('載入中…') }}</p>
+    <p v-else-if="!post" class="muted center">{{ t('找不到這個問題，可能已被刪除。') }}</p>
     <div v-else class="stack">
       <div class="card stack">
         <div class="row">
-          <span class="muted small">{{ post.category_name }} · {{ formatDate(post.created_at) }}</span>
-          <span class="status" :class="STATUS[post.status].cls">{{ STATUS[post.status].label }}</span>
+          <span class="muted small">{{ t(post.category_name) }} · {{ formatDate(post.created_at) }}</span>
+          <span class="status" :class="STATUS[post.status].cls">{{ t(STATUS[post.status].label) }}</span>
         </div>
-        <h2>{{ post.title }}</h2>
-        <p v-if="author" class="note"><Icon name="user" :size="18" />發布者：{{ author.full_name }}（{{ author.student_id }}）</p>
+        <h2>{{ post.moderation === 'redacted' && post.suggestion === null ? t(post.title) : post.title }}</h2>
+        <p v-if="author" class="note"><Icon name="user" :size="18" />{{ t('發布者：') }}{{ author.full_name }}（{{ author.student_id }}）</p>
         <p v-if="post.moderation === 'redacted' && (post.is_mine || isStaff())" class="note warn">
-          涉及個人信息：其他同學看不到這個帖子的內容，只有發布者和權益部看得到。
+          {{ t('涉及個人信息：其他同學看不到這個帖子的內容，只有發布者和權益部看得到。') }}
         </p>
-        <section><h4>問題描述</h4><p>{{ post.problem }}</p></section>
-        <section v-if="post.suggestion"><h4>可行建議</h4><p>{{ post.suggestion }}</p></section>
-        <section v-if="post.expected"><h4>預期解決效果</h4><p>{{ post.expected }}</p></section>
-        <section v-if="post.help_offer"><h4>願意付出的努力</h4><p>{{ post.help_offer }}</p></section>
+        <section><h4>{{ t('問題描述') }}</h4><p>{{ post.moderation === 'redacted' && post.suggestion === null ? t(post.problem) : post.problem }}</p></section>
+        <section v-if="post.suggestion"><h4>{{ t('可行建議') }}</h4><p>{{ post.suggestion }}</p></section>
+        <section v-if="post.expected"><h4>{{ t('預期解決效果') }}</h4><p>{{ post.expected }}</p></section>
+        <section v-if="post.help_offer"><h4>{{ t('願意付出的努力') }}</h4><p>{{ post.help_offer }}</p></section>
         <div><MeTooButton :post="post" /></div>
       </div>
 
       <div class="card stack">
-        <h3>權益部回覆</h3>
-        <p v-if="!replies.length" class="muted">尚無回覆</p>
+        <h3>{{ t('權益部回覆') }}</h3>
+        <p v-if="!replies.length" class="muted">{{ t('尚無回覆') }}</p>
         <div v-for="r in replies" :key="r.id" class="reply">
           <p>{{ r.body }}</p>
           <span class="muted small">{{ formatDate(r.created_at) }}</span>
         </div>
         <form v-if="isStaff()" class="stack" @submit.prevent="sendReply">
-          <textarea v-model="replyText" placeholder="以權益部身份回覆" />
-          <button class="btn">送出回覆</button>
+          <textarea v-model="replyText" :placeholder="t('以權益部身份回覆')" />
+          <button class="btn">{{ t('送出回覆') }}</button>
         </form>
       </div>
 
       <div v-if="isStaff()" class="card stack">
-        <h3>處理狀態</h3>
+        <h3>{{ t('處理狀態') }}</h3>
         <select :value="post.status" @change="changeStatus">
-          <option v-for="(s, key) in STATUS" :key="key" :value="key">{{ s.label }}</option>
+          <option v-for="(s, key) in STATUS" :key="key" :value="key">{{ t(s.label) }}</option>
         </select>
       </div>
 
       <div v-if="isStaff()" class="card stack">
-        <h3>敏感內容處理</h3>
+        <h3>{{ t('敏感內容處理') }}</h3>
         <template v-if="moderation">
           <p class="note">
-            已申請「{{ MODERATION_KIND[moderation.kind].label }}」，原因：{{ moderation.reason }}。
-            已確認 {{ moderation.moderation_votes.length }}/2，請另一位權益部到後台「敏感帖子」確認。
+            {{ t('已申請「{kind}」，原因：{reason}。已確認 {count}/2，請另一位權益部到後台「敏感帖子」確認。', { kind: t(MODERATION_KIND[moderation.kind].label), reason: moderation.reason, count: moderation.moderation_votes.length }) }}
           </p>
         </template>
         <template v-else>
-          <p class="muted small">需要兩位權益部確認才會生效，你提出申請算第一位。</p>
+          <p class="muted small">{{ t('需要兩位權益部確認才會生效，你提出申請算第一位。') }}</p>
           <div class="chips">
-            <button type="button" class="chip" :class="{ on: modKind === 'hide' }" @click="modKind = 'hide'">隱藏</button>
-            <button v-if="post.moderation !== 'redacted'" type="button" class="chip" :class="{ on: modKind === 'redact' }" @click="modKind = 'redact'">涉及個人信息</button>
+            <button type="button" class="chip" :class="{ on: modKind === 'hide' }" @click="modKind = 'hide'">{{ t('隱藏') }}</button>
+            <button v-if="post.moderation !== 'redacted'" type="button" class="chip" :class="{ on: modKind === 'redact' }" @click="modKind = 'redact'">{{ t('涉及個人信息') }}</button>
           </div>
           <template v-if="modKind">
-            <p class="muted small">{{ MODERATION_KIND[modKind].hint }}</p>
-            <textarea v-model="modReason" placeholder="原因（只有權益部看得到）" />
-            <button class="btn danger" @click="requestModeration">申請{{ MODERATION_KIND[modKind].label }}</button>
+            <p class="muted small">{{ t(MODERATION_KIND[modKind].hint) }}</p>
+            <textarea v-model="modReason" :placeholder="t('原因（只有權益部看得到）')" />
+            <button class="btn danger" @click="requestModeration">{{ t('申請{kind}', { kind: t(MODERATION_KIND[modKind].label) }) }}</button>
           </template>
         </template>
       </div>
 
       <div v-if="post.is_mine" class="card stack">
-        <h3>我的問題</h3>
+        <h3>{{ t('我的問題') }}</h3>
         <p v-if="pendingRequest" class="note">
-          {{ pendingRequest.kind === 'edit' ? '修改' : '刪除' }}申請審核中，權益部同意後才會生效。
+          {{ t('{kind}申請審核中，權益部同意後才會生效。', { kind: t(pendingRequest.kind === 'edit' ? '修改' : '刪除') }) }}
         </p>
         <template v-else>
-          <p class="muted small">修改或刪除需要權益部同意。</p>
+          <p class="muted small">{{ t('修改或刪除需要權益部同意。') }}</p>
           <div class="actions">
-            <router-link :to="`/new?edit=${id}`" class="btn ghost">申請修改</router-link>
-            <button v-if="!confirmDelete" class="btn danger" @click="confirmDelete = true">申請刪除</button>
-            <button v-else class="btn danger" @click="requestDelete">確定申請刪除</button>
+            <router-link :to="`/new?edit=${id}`" class="btn ghost">{{ t('申請修改') }}</router-link>
+            <button v-if="!confirmDelete" class="btn danger" @click="confirmDelete = true">{{ t('申請刪除') }}</button>
+            <button v-else class="btn danger" @click="requestDelete">{{ t('確定申請刪除') }}</button>
           </div>
         </template>
       </div>
 
-      <p v-if="message" class="note">{{ message }}</p>
+      <p v-if="message" class="note">{{ t(message) }}</p>
     </div>
   </div>
 </template>
