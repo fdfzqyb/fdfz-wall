@@ -4,9 +4,9 @@
 
 -- 這些情況要權益部同意（走 change_requests）：
 --   狀態已經不是「待處理」、權益部回覆過、被做過敏感處理，
---   或有 5 位以上其他同學按了「我也遇到」。
+--   或有 20 位以上其他同學按了「我也遇到」。
 -- 其他情況（剛發、還沒人處理）直接生效。
--- 想調整「我也遇到」的門檻，改下面的 5 再執行一次即可。
+-- 想調整「我也遇到」的門檻，改下面的 20 再執行一次即可。
 create or replace function post_needs_approval(pid bigint) returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (
@@ -16,7 +16,7 @@ language sql stable security definer set search_path = public as $$
            or p.moderation is not null
            or exists (select 1 from replies r where r.post_id = p.id)
            or (select count(*) from me_too m
-               where m.post_id = p.id and m.user_id <> p.author_id) >= 5)
+               where m.post_id = p.id and m.user_id <> p.author_id) >= 20)
   );
 $$;
 revoke execute on function post_needs_approval(bigint) from public, anon;
