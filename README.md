@@ -14,7 +14,7 @@
 4. **Authentication → Sign In / Providers → Email**：
    - 保留 Confirm email（同學要點驗證信）
    - Minimum password length 設為 8
-5. **Authentication → URL Configuration**：Site URL 填網站網址（本機測試時是 `http://localhost:5173`，上線後改成 Cloudflare 給的 `xxx.pages.dev`）。
+5. **Authentication → URL Configuration**：Site URL 填網站網址（本機測試時是 `http://localhost:5173`，上線後改成 Cloudflare 給的 `xxx.workers.dev`；綁定自己的域名後改成新網址，並把新網址加進 Redirect URLs）。
 6. 正式開放註冊前，到 **Authentication → Emails → SMTP Settings** 接一個寄信服務（例如 Resend）。Supabase 內建的寄信每小時只能寄很少封。
 
 ### 建立超級管理員帳號
