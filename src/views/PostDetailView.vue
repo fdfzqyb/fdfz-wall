@@ -40,7 +40,7 @@ async function load() {
   }
   if (isStaff()) {
     const { data } = await supabase.from('posts')
-      .select('profiles(full_name, student_id)').eq('id', id).single()
+      .select('profiles!author_id(full_name, student_id)').eq('id', id).single()
     author.value = data?.profiles
     const { data: m } = await supabase.from('moderation_requests')
       .select('kind, reason, moderation_votes(staff_id)').eq('post_id', id).eq('status', 'pending').maybeSingle()

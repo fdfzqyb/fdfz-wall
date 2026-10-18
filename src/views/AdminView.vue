@@ -67,7 +67,7 @@ async function decide(r, approve) {
 
 async function loadModerations() {
   const { data } = await supabase.from('moderation_requests')
-    .select('*, posts(title, problem), profiles(full_name), moderation_votes(staff_id)')
+    .select('*, posts(title, problem), profiles!created_by(full_name), moderation_votes(staff_id)')
     .eq('status', 'pending').order('created_at')
   moderations.value = data ?? []
 }
