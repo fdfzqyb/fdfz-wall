@@ -9,7 +9,7 @@
 ## 第一次設定 Supabase
 
 1. 到 [supabase.com](https://supabase.com) 建一個新專案。
-2. **Storage** → New bucket，名稱 `id-cards`，**不要**勾 Public。可以把檔案大小上限設為 5 MB、只允許 `image/*`。
+2. **Storage** → New bucket，名稱 `id-cards`，**不要**勾 Public。把檔案大小上限設為 3 MB、只允許 `image/*`。
 3. **SQL Editor** → 把 `supabase/schema.sql` 整份貼上 → Run。只需要執行一次。
 4. **Authentication → Sign In / Providers → Email**：
    - 關掉 Confirm email（同學註冊後直接登入，不用點驗證信；身份由權益部看學生證審核）
@@ -29,33 +29,9 @@ update profiles set role = 'admin', verify_status = 'approved' where student_id 
 
 之後在網站的「權益部」頁 →「用戶管理」就能設定誰是權益部。權益部只能審核新帳號，不能改任何人的身份。
 
-### 已經用舊版 schema.sql 建好資料庫？
+### 已經建好的資料庫要升級？
 
-到 SQL Editor 執行一次 [`supabase/migrations/002_super_admin.sql`](supabase/migrations/002_super_admin.sql)，再單獨執行上面那句把自己設為 admin。
-
-### 待處理帖子不公開
-
-執行過 008 的資料庫，再到 SQL Editor 執行一次 [`supabase/migrations/010_pending_private.sql`](supabase/migrations/010_pending_private.sql)。所有分類「待處理」的帖子都只有發帖者和權益部看得到；食堂、寢室、校區基礎設施在其他狀態公開，課程安排和其它仍只在「處理中」「已解決」時公開。
-
-### 課程安排、其它的公開範圍
-
-已經建好的資料庫，到 SQL Editor 執行一次 [`supabase/migrations/008_category_visibility.sql`](supabase/migrations/008_category_visibility.sql)。食堂、寢室、校區基礎設施的帖子全面公開；課程安排和其它只在「處理中」「已解決」時公開，「待處理」「暫不能解決」只有發帖者和權益部看得到（回覆和「我也遇到」也一樣）。
-
-### 加上權益部重設密碼
-
-已經建好的資料庫，到 SQL Editor 執行一次 [`supabase/migrations/007_reset_password.sql`](supabase/migrations/007_reset_password.sql)。同學忘記密碼時，權益部當面核對學生證，在後台「重設密碼」輸入學號產生臨時密碼；同學用臨時密碼登入後，網站會要求他先改成自己的密碼。權益部只能重設普通同學，管理員還可以重設權益部。管理員自己的密碼要到 Supabase 後台 Authentication → Users 處理。
-
-### 加上刪除未通過的註冊
-
-已經建好的資料庫，到 SQL Editor 執行一次 [`supabase/migrations/006_delete_unapproved.sql`](supabase/migrations/006_delete_unapproved.sql)。權益部可以在後台「帳號審核」刪除待審核的註冊，管理員可以在「用戶管理」刪除任何未通過的帳號，同學自己也能在審核頁刪掉這次註冊。刪除後同一個學號和 email 可以重新註冊。已通過的帳號不能這樣刪。
-
-### 加上敏感帖子處理
-
-已經建好的資料庫，到 SQL Editor 執行一次 [`supabase/migrations/005_moderation.sql`](supabase/migrations/005_moderation.sql)。權益部在問題詳情頁最下面可以申請「隱藏」（暴力、色情、恐嚇、辱罵）或「涉及個人信息」，另一位權益部到後台「敏感帖子」確認後才生效。
-
-### 加上公告功能
-
-已經建好的資料庫，到 SQL Editor 依序各執行一次 [`supabase/migrations/003_announcements.sql`](supabase/migrations/003_announcements.sql) 和 [`004_rename_announcements.sql`](supabase/migrations/004_rename_announcements.sql)（已執行過 003 的只要跑 004）。權益部和管理員就能在「通知」頁發布公告：長期公告置頂到手動刪除，短期通知兩週後自動消失；可以選給全體用戶或只給權益部看。
+`schema.sql` 永遠是最新的完整版。以後資料庫有改動，會另外給一個升級檔案，到 SQL Editor 執行一次即可。以前的升級檔案（002～010）都收在 [`supabase/archive/`](supabase/archive/)，線上資料庫已經全部執行過，新建的資料庫也不需要。
 
 ## 在自己電腦上執行
 
