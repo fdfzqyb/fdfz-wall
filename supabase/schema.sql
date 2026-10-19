@@ -394,7 +394,7 @@ grant execute on function review_change_request(bigint, boolean) to authenticate
 --   狀態已經不是「待處理」、權益部回覆過、被做過敏感處理，
 --   或有 20 位以上其他同學按了「我也遇到」。
 -- 其他情況（剛發、還沒人處理）直接生效。
--- 想調整「我也遇到」的門檻，改下面的 20，並用 migrations/009 的寫法重新建立函數。
+-- 想調整「我也遇到」的門檻，改下面的 20，再把整個函數貼到 SQL Editor 執行一次。
 create or replace function post_needs_approval(pid bigint) returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (
