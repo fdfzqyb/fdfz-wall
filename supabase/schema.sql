@@ -161,12 +161,13 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- 誰看得到哪些帖子（權益部看全部，不經過這裡）：
--- 食堂、寢室、校區基礎設施全面公開；
--- 課程安排、其它只有「處理中」「已解決」才公開，「待處理」「暫不能解決」只有發帖者看得到。
+-- 「待處理」的帖子一律只有發帖者看得到；
+-- 食堂、寢室、校區基礎設施在「處理中」「已解決」「暫不能解決」時公開；
+-- 課程安排、其它只有「處理中」「已解決」才公開。
 create function post_visible_to_me(cat_name text, st post_status, author uuid) returns boolean
 language sql stable as $$
-  select cat_name in ('食堂', '寢室', '校區基礎設施')
-      or st in ('in_progress', 'resolved')
+  select st in ('in_progress', 'resolved')
+      or (st = 'wont_fix' and cat_name in ('食堂', '寢室', '校區基礎設施'))
       or author = auth.uid();
 $$;
 create function post_visible(pid bigint) returns boolean
