@@ -3,6 +3,7 @@ import { t } from '../i18n'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../supabase'
+import { categories, loadCategories } from '../categories'
 import Icon from '../components/Icon.vue'
 
 const route = useRoute()
@@ -10,15 +11,13 @@ const router = useRouter()
 // 帶 ?edit=問題id 時是修改：交給 change_my_post，資料庫決定直接生效還是送出申請
 const editId = route.query.edit ? Number(route.query.edit) : null
 
-const categories = ref([])
 const form = ref({ category_id: '', title: '', problem: '', suggestion: '', expected: '', help_offer: '' })
 const error = ref('')
 const busy = ref(false)
 const needsApproval = ref(true)
 
 onMounted(async () => {
-  const { data } = await supabase.from('categories').select('*').order('sort_order')
-  categories.value = data ?? []
+  await loadCategories()
   if (editId) {
     const { data: p } = await supabase.from('post_feed').select('*').eq('id', editId).single()
     if (p) {

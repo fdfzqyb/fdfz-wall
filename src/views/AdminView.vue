@@ -2,7 +2,8 @@
 import { t, message as uiMessage } from '../i18n'
 import { ref, onMounted } from 'vue'
 import { supabase } from '../supabase'
-import { formatDate, MODERATION_KIND, STATUS, CATEGORY_ICON } from '../constants'
+import { formatDate, MODERATION_KIND, STATUS, CATEGORY_ICON, ROLE_LABEL, VERIFY_LABEL, cardPath } from '../constants'
+import { categories, loadCategories } from '../categories'
 import { auth, isAdmin } from '../auth'
 import TabBar from '../components/TabBar.vue'
 import Icon from '../components/Icon.vue'
@@ -22,21 +23,22 @@ async function loadAccounts() {
     .select('id, full_name, student_id, verify_status, created_at')
     .in('verify_status', ['pending', 'rejected'])
     .order('created_at')
-  const list = []
-  for (const p of data ?? []) {
-    const { data: signed } = await supabase.storage
-      .from('id-cards').createSignedUrl(`${p.id}/card.jpg`, 600)
-    if (p.verify_status === 'rejected' && !signed) continue
-    list.push({ ...p, photo: signed?.signedUrl ?? null })
-  }
-  accounts.value = list
+  const rows = data ?? []
+  // 一次請求取回所有照片網址；沒有照片的帳號 signedUrl 是空的
+  const { data: signed } = rows.length
+    ? await supabase.storage.from('id-cards').createSignedUrls(rows.map((p) => cardPath(p.id)), 600)
+    : { data: [] }
+  const urlByPath = new Map((signed ?? []).filter((s) => s.signedUrl).map((s) => [s.path, s.signedUrl]))
+  accounts.value = rows
+    .map((p) => ({ ...p, photo: urlByPath.get(cardPath(p.id)) ?? null }))
+    .filter((p) => p.verify_status !== 'rejected' || p.photo)
 }
 
 async function review(p, approve) {
   const { error } = await supabase.rpc('review_account', { target: p.id, approve })
   if (error) return (message.value = error.message)
   // 不論通過或拒絕，審核完就刪除學生證照片
-  await supabase.storage.from('id-cards').remove([`${p.id}/card.jpg`])
+  await supabase.storage.from('id-cards').remove([cardPath(p.id)])
   accounts.value = accounts.value.filter((a) => a.id !== p.id)
   message.value = uiMessage(approve ? '已通過 {name}，照片已刪除' : '已拒絕 {name}，照片已刪除', { name: p.full_name })
 }
@@ -44,7 +46,7 @@ async function review(p, approve) {
 // 刪除未通過審核的帳號，讓同學可以用同一個學號和 email 重新註冊
 async function removeAccount(p) {
   if (!window.confirm(t('確定刪除 {name}（{sid}）的註冊？對方需要重新註冊。', { name: p.full_name, sid: p.student_id }))) return
-  await supabase.storage.from('id-cards').remove([`${p.id}/card.jpg`])
+  await supabase.storage.from('id-cards').remove([cardPath(p.id)])
   const { error } = await supabase.rpc('delete_unapproved_account', { target: p.id })
   if (error) return (message.value = error.message)
   accounts.value = accounts.value.filter((a) => a.id !== p.id)
@@ -111,8 +113,6 @@ async function loadFeedback() {
 }
 
 // 以下只有超級管理員用得到；資料庫也會檢查身份，普通權益部呼叫會被拒絕
-const ROLE_LABEL = { student: '普通同學', staff: '權益部', admin: '管理員' }
-const STATUS_LABEL = { pending: '待審核', approved: '已通過', rejected: '未通過' }
 
 async function loadUsers() {
   const { data } = await supabase.rpc('admin_list_users')
@@ -135,15 +135,9 @@ async function changeRole(u, newRole) {
 
 // 導出帖子為 CSV，給權益部整理用（含發布者姓名學號，請勿外傳）
 const EXPORT_RANGES = { month: '最近一個月', half: '最近六個月', all: '所有時間' }
-const categories = ref([])
 const exportRange = ref('month')
 const exportCategory = ref('all')
 const exporting = ref(false)
-
-async function loadCategories() {
-  const { data } = await supabase.from('categories').select('id, name').order('sort_order')
-  categories.value = data ?? []
-}
 
 function exportSince() {
   if (exportRange.value === 'all') return null
@@ -359,7 +353,7 @@ onMounted(() => Promise.all([
       <div v-for="u in filteredUsers()" :key="u.id" class="card user">
         <div>
           <strong>{{ u.full_name }}</strong> · {{ u.student_id }}
-          <p class="muted small">{{ u.email }} · {{ t(STATUS_LABEL[u.verify_status]) }} · {{ formatDate(u.created_at) }}</p>
+          <p class="muted small">{{ u.email }} · {{ t(VERIFY_LABEL[u.verify_status]) }} · {{ formatDate(u.created_at) }}</p>
         </div>
         <span v-if="u.role === 'admin' || u.id === auth.session.user.id" class="muted small">{{ t(ROLE_LABEL[u.role]) }}</span>
         <div v-else class="user-actions">
