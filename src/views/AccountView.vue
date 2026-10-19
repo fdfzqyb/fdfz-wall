@@ -4,10 +4,10 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../supabase'
 import { auth, signOut, loadProfile } from '../auth'
+import { ROLE_LABEL } from '../constants'
 import TabBar from '../components/TabBar.vue'
 
 const router = useRouter()
-const ROLE_LABEL = { student: '普通同學', staff: '權益部', admin: '管理員' }
 
 const profile = computed(() => auth.profile ?? {})
 const email = computed(() => auth.session?.user?.email ?? '')

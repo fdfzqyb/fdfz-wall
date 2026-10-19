@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../supabase'
 import { shrinkImage } from '../image'
+import { cardPath } from '../constants'
 import Icon from '../components/Icon.vue'
 
 const router = useRouter()
@@ -53,7 +54,7 @@ async function submit() {
     // 不能用 upsert：覆蓋需要讀取權限，而新帳號還沒審核、讀不到資料夾
     const { error: uploadError } = await supabase.storage
       .from('id-cards')
-      .upload(`${data.user.id}/card.jpg`, blob, { contentType: 'image/jpeg' })
+      .upload(cardPath(data.user.id), blob, { contentType: 'image/jpeg' })
     if (uploadError) {
       error.value = uiMessage('帳號已建立，但照片上傳失敗，請登入後在等待頁重新上傳（{error}）', { error: uploadError.message })
       return

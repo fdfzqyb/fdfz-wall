@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import { supabase } from '../supabase'
 import { auth, signOut, loadProfile, isApproved } from '../auth'
 import { shrinkImage } from '../image'
+import { CARD_FILE, cardPath } from '../constants'
 import Icon from '../components/Icon.vue'
 
 const router = useRouter()
@@ -21,7 +22,7 @@ const hasPhoto = ref(true)
 onMounted(async () => {
   if (!auth.session) return
   const { data } = await supabase.storage.from('id-cards').list(auth.session.user.id)
-  hasPhoto.value = !!data?.some((f) => f.name === 'card.jpg')
+  hasPhoto.value = !!data?.some((f) => f.name === CARD_FILE)
 })
 
 async function reupload(e) {
@@ -30,7 +31,7 @@ async function reupload(e) {
   const blob = await shrinkImage(file)
   const { error } = await supabase.storage
     .from('id-cards')
-    .upload(`${auth.session.user.id}/card.jpg`, blob, { upsert: true, contentType: 'image/jpeg' })
+    .upload(cardPath(auth.session.user.id), blob, { upsert: true, contentType: 'image/jpeg' })
   if (error) {
     message.value = uiMessage('上傳失敗，請稍後再試（{error}）', { error: error.message })
   } else {
@@ -48,7 +49,7 @@ async function refresh() {
 async function deleteAccount() {
   if (!window.confirm(t('確定刪除這次註冊？刪除後要重新填寫資料、上傳校園卡。'))) return
   const id = auth.session.user.id
-  await supabase.storage.from('id-cards').remove([`${id}/card.jpg`])
+  await supabase.storage.from('id-cards').remove([cardPath(id)])
   const { error } = await supabase.rpc('delete_unapproved_account', { target: id })
   if (error) return (message.value = uiMessage('刪除失敗：{error}', { error: error.message }))
   // 帳號已經不在了，只清掉這台裝置上的登入狀態

@@ -6,8 +6,8 @@ import PostCard from '../components/PostCard.vue'
 import TabBar from '../components/TabBar.vue'
 import Icon from '../components/Icon.vue'
 import { CATEGORY_ICON } from '../constants'
+import { categories, loadCategories } from '../categories'
 
-const categories = ref([])
 const posts = ref([])
 const category = ref(null) // null = 全部
 const sort = ref('new')    // new = 最新，hot = 最多人遇到
@@ -30,8 +30,7 @@ async function load() {
 }
 
 onMounted(async () => {
-  const { data } = await supabase.from('categories').select('*').order('sort_order')
-  categories.value = data ?? []
+  await loadCategories()
 })
 
 let timer
