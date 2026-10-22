@@ -33,11 +33,11 @@ async function logout() {
         <button type="button" class="btn" :class="{ ghost: locale !== 'zh-Hans' }" :aria-pressed="locale === 'zh-Hans'" lang="zh-Hans" @click="setLocale('zh-Hans')">简体中文</button>
         <button type="button" class="btn" :class="{ ghost: locale !== 'zh-Hant' }" :aria-pressed="locale === 'zh-Hant'" lang="zh-Hant" @click="setLocale('zh-Hant')">繁體中文</button>
       </div>
-      <p class="muted small">{{ t('權益牆、樹洞等 fdfz.click 網站共用這個設定。') }}</p>
+      <p class="muted small">{{ t('所有 fdfz.click 網站共用這個設定。') }}</p>
     </section>
 
     <a :href="settingsUrl" class="btn ghost block">{{ t('帳號設定（改密碼）') }}</a>
-    <p class="center muted small">{{ t('權益牆、樹洞、前帆報共用同一個帳號。') }}</p>
+    <p class="center muted small">{{ t('所有 fdfz.click 網站共用同一個帳號。') }}</p>
 
     <button class="btn plain block" @click="logout">{{ t('登出') }}</button>
   </div>
