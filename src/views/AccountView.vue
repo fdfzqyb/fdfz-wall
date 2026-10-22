@@ -1,50 +1,19 @@
 <script setup>
 import { locale, setLocale, t } from '../i18n'
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { supabase } from '../supabase'
-import { auth, signOut, loadProfile } from '../auth'
+import { computed } from 'vue'
+import { auth, signOut } from '../auth'
 import { ROLE_LABEL } from '../constants'
+import { accountUrl } from '../fdfz'
 import TabBar from '../components/TabBar.vue'
-
-const router = useRouter()
 
 const profile = computed(() => auth.profile ?? {})
 const email = computed(() => auth.session?.user?.email ?? '')
-
-const current = ref('')
-const next = ref('')
-const again = ref('')
-const error = ref('')
-const message = ref('')
-const saving = ref(false)
-
-async function changePassword() {
-  error.value = ''
-  message.value = ''
-  if (next.value.length < 8) return (error.value = '新密碼至少 8 個字元')
-  if (next.value !== again.value) return (error.value = '兩次輸入的新密碼不一樣')
-  saving.value = true
-  // 先用舊密碼登入一次，確認是本人在操作
-  const { error: wrong } = await supabase.auth.signInWithPassword({ email: email.value, password: current.value })
-  if (wrong) {
-    saving.value = false
-    return (error.value = '目前密碼不正確')
-  }
-  const { error: failed } = await supabase.auth.updateUser({ password: next.value })
-  saving.value = false
-  if (failed) return (error.value = failed.message.includes('different') ? '新密碼不能和舊密碼一樣' : '修改失敗，請稍後再試')
-  if (auth.profile?.must_change_password) {
-    await supabase.rpc('password_changed')
-    await loadProfile()
-  }
-  current.value = next.value = again.value = ''
-  message.value = '密碼已修改，下次請用新密碼登入'
-}
+// 改密碼等帳號設定在帳號中心，改完可以按「回到權益牆」回來
+const settingsUrl = accountUrl('/')
 
 async function logout() {
   await signOut()
-  router.push('/login')
+  window.location.assign(accountUrl('/login', location.origin + '/'))
 }
 </script>
 
@@ -64,30 +33,11 @@ async function logout() {
         <button type="button" class="btn" :class="{ ghost: locale !== 'zh-Hans' }" :aria-pressed="locale === 'zh-Hans'" lang="zh-Hans" @click="setLocale('zh-Hans')">简体中文</button>
         <button type="button" class="btn" :class="{ ghost: locale !== 'zh-Hant' }" :aria-pressed="locale === 'zh-Hant'" lang="zh-Hant" @click="setLocale('zh-Hant')">繁體中文</button>
       </div>
-      <p class="muted small">{{ t('選擇介面語言，會自動儲存在此裝置。') }}</p>
+      <p class="muted small">{{ t('權益牆、樹洞等 fdfz.click 網站共用這個設定。') }}</p>
     </section>
 
-    <p v-if="profile.must_change_password" class="note">{{ t('你正在使用權益部給的臨時密碼，請先改成自己的密碼，才能使用其他功能。') }}</p>
-
-    <form class="card stack" @submit.prevent="changePassword">
-      <h2>{{ t('修改密碼') }}</h2>
-      <label class="field">
-        <span>{{ profile.must_change_password ? t('臨時密碼') : t('目前密碼') }}</span>
-        <input v-model="current" type="password" autocomplete="current-password" required />
-      </label>
-      <label class="field">
-        <span>{{ t('新密碼') }}</span>
-        <input v-model="next" type="password" autocomplete="new-password" required />
-        <small>{{ t('至少 8 個字元') }}</small>
-      </label>
-      <label class="field">
-        <span>{{ t('再輸入一次新密碼') }}</span>
-        <input v-model="again" type="password" autocomplete="new-password" required />
-      </label>
-      <p v-if="error" class="error">{{ t(error) }}</p>
-      <p v-if="message" class="note">{{ t(message) }}</p>
-      <button class="btn block" :disabled="saving">{{ saving ? t('修改中…') : t('確認修改') }}</button>
-    </form>
+    <a :href="settingsUrl" class="btn ghost block">{{ t('帳號設定（改密碼）') }}</a>
+    <p class="center muted small">{{ t('權益牆、樹洞、前帆報共用同一個帳號。') }}</p>
 
     <button class="btn plain block" @click="logout">{{ t('登出') }}</button>
   </div>

@@ -27,11 +27,18 @@ export async function loadProfile() {
 }
 
 async function loadSession() {
-  // 點驗證連結回來時，網址裡帶著登入憑證，getSession 會連到 Supabase 換成登入狀態
   const { data, error } = await supabase.auth.getSession()
   if (error) throw error
   auth.session = data.session
   await loadProfile()
+}
+
+// 在別的 fdfz.click 站登入或登出後，cookie 變了，但這個分頁不會收到通知；
+// 所以每次切回這個分頁都重新讀一次，換了人或被登出就重新載入，讓路由重新判斷該去哪
+async function recheck() {
+  if (document.visibilityState !== 'visible') return
+  const { data } = await supabase.auth.getSession()
+  if (data.session?.user.id !== auth.session?.user.id) location.reload()
 }
 
 export async function initAuth() {
@@ -57,26 +64,13 @@ export async function initAuth() {
     // 不能在這個回呼裡直接 await Supabase 查詢，所以放到下一輪執行
     setTimeout(loadProfile, 0)
   })
+  document.addEventListener('visibilitychange', recheck)
 }
 
 export const isApproved = () => auth.profile?.verify_status === 'approved'
 // admin（超級管理員）擁有權益部的全部權限，另外可以改別人的身份
 export const isStaff = () => isApproved() && ['staff', 'admin'].includes(auth.profile?.role)
 export const isAdmin = () => isApproved() && auth.profile?.role === 'admin'
-
-// 輸入八位數字當學號，否則當 email
-export async function signIn(account, password) {
-  let email = account.trim()
-  if (/^\d{8}$/.test(email)) {
-    const { data, error } = await supabase.rpc('login_email', { sid: email, pw: password })
-    if (error || !data) return '學號或密碼錯誤'
-    email = data
-  }
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
-  if (!error) return null
-  if (error.message.includes('Email not confirmed')) return '請先到信箱點擊驗證連結'
-  return '帳號或密碼錯誤'
-}
 
 export async function signOut() {
   await supabase.auth.signOut()
