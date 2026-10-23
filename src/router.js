@@ -1,11 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { auth, authReady, isApproved, isStaff } from './auth'
+import { accountUrl } from './fdfz'
 
-// meta.public：不用登入也能看；meta.staff：只有權益部能進
+// 登入、註冊、等待審核、改密碼都在帳號中心 account.fdfz.click，這裡舊的網址直接轉過去
+const toAccount = (path) => () => {
+  window.location.assign(accountUrl(path, location.origin + '/'))
+  return false
+}
+
+// meta.staff：只有權益部能進
 const routes = [
-  { path: '/login', component: () => import('./views/LoginView.vue'), meta: { public: true } },
-  { path: '/register', component: () => import('./views/RegisterView.vue'), meta: { public: true } },
-  { path: '/pending', component: () => import('./views/PendingView.vue'), meta: { public: true } },
+  { path: '/login', beforeEnter: toAccount('/login'), component: {} },
+  { path: '/register', beforeEnter: toAccount('/register'), component: {} },
+  { path: '/pending', beforeEnter: toAccount('/pending'), component: {} },
   { path: '/', component: () => import('./views/HomeView.vue') },
   { path: '/mine', component: () => import('./views/MyPostsView.vue') },
   { path: '/new', component: () => import('./views/NewPostView.vue') },
@@ -24,13 +31,14 @@ export const router = createRouter({
 
 router.beforeEach(async (to) => {
   await authReady
-  // 點完驗證連結會回到 /login 並已登入，直接帶進站
-  if (to.path === '/login' && auth.session) return isApproved() ? '/' : '/pending'
-  if (to.meta.public) return true
-  if (!auth.session) return '/login'
-  if (!isApproved()) return '/pending'
-  // 權益部重設成臨時密碼後，要先改成自己的密碼才能用其他頁面
-  if (auth.profile?.must_change_password && to.path !== '/account') return '/account'
+  if (['/login', '/register', '/pending'].includes(to.path)) return true
+  // 沒登入、還沒通過審核、權益部重設成臨時密碼：都送到帳號中心處理，好了會回到這一頁
+  const back = location.origin + to.fullPath
+  const fix = !auth.session ? '/login' : !isApproved() ? '/pending' : auth.profile?.must_change_password ? '/' : null
+  if (fix) {
+    window.location.assign(accountUrl(fix, back))
+    return false
+  }
   if (to.meta.staff && !isStaff()) return '/'
   return true
 })

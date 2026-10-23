@@ -57,13 +57,15 @@ Cloudflare 控制台 → Workers & Pages → 建立 → 連接 GitHub，選這�
 
 之後每次推到 `main` 都會自動重新部署。
 
+## 登入和帳號中心
+
+登入狀態存在 `.fdfz.click` 的 cookie（[`src/supabase.js`](src/supabase.js)、[`src/fdfz.js`](src/fdfz.js)），和樹洞、帳號中心共用：在任何一站登入，權益牆就是登入狀態。沒登入、還沒通過審核、要改臨時密碼時，會送到帳號中心處理，好了自動回來。`src/fdfz.js` 和 `src/supabase.js` 各站放一份一模一樣的，改了要一起改（原本在 fdfzqyb/fdfz-click-account）。
+
 ## 頁面一覽
 
 | 頁面 | 路徑 | 誰能看 |
 | --- | --- | --- |
-| 登入（學號或 email） | `/login` | 所有人 |
-| 註冊（含學生證照片） | `/register` | 所有人 |
-| 等待審核 | `/pending` | 註冊後、未通過審核 |
+| 登入、註冊、等待審核、改密碼 | 在帳號中心 [account.fdfz.click](https://account.fdfz.click)，`/login` 等舊網址會自動轉過去 | 所有人 |
 | 問題牆（分類、搜尋、排序、我也遇到） | `/` | 已審核同學 |
 | 發布問題 / 申請修改 | `/new` | 已審核同學 |
 | 問題詳情、回覆、申請刪除 | `/posts/:id` | 已審核同學 |
