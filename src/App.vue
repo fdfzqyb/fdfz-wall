@@ -7,7 +7,7 @@ const reload = () => window.location.reload()
 
 watch(locale, (value) => {
   document.documentElement.lang = value
-  document.title = t('fdfz權益牆')
+  document.title = t('FDFZ 權益牆')
 }, { immediate: true })
 </script>
 
