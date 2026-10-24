@@ -1,0 +1,28 @@
+# 每天自動敲一次 Supabase，避免免費專案因為一週沒人用而被暫停。
+# 敲的是 student_id_taken：只檢查某個學號有沒有註冊過，不會改任何資料。
+# 網址和 publishable key 從 .env.production 讀（這兩個值本來就是公開的），換 Supabase 專案時不用改這裡。
+# 想手動測試：GitHub 的 Actions 頁 → Keep Supabase awake → Run workflow。
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: '17 3 * * *' # 每天 03:17 UTC（台灣、北京時間 11:17）
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ping Supabase
+        run: |
+          set -a
+          . ./.env.production
+          set +a
+          curl --fail --silent --show-error --max-time 30 \
+            -X POST "$VITE_SUPABASE_URL/rest/v1/rpc/student_id_taken" \
+            -H "apikey: $VITE_SUPABASE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"sid":"00000000"}'
+          echo
