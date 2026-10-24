@@ -42,7 +42,7 @@ watch([category, sort], load, { immediate: true })
   <header class="home-head">
     <div class="brand">
       <img src="/logo.jpg" alt="" class="logo-sm" />
-      <h1>{{ t('fdfz權益牆') }}</h1>
+      <h1>{{ t('FDFZ 權益牆') }}</h1>
     </div>
     <label class="search">
       <Icon name="search" :size="20" />
